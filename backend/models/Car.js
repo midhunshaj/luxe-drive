@@ -1,0 +1,25 @@
+const mongoose = require('mongoose');
+
+const carSchema = new mongoose.Schema({
+  make: { type: String, required: true },
+  model: { type: String, required: true },
+  year: { type: Number, required: true },
+  category: { type: String, required: true },
+  pricePerDay: { type: Number, required: true },
+  availabilityStatus: { type: String, enum: ['available', 'rented', 'maintenance'], default: 'available' },
+  // GeoJSON data structure for Map Integration
+  location: {
+    type: { type: String, default: 'Point' },
+    coordinates: { type: [Number], required: true } // format: [longitude, latitude]
+  },
+  images: [{ type: String }],
+  features: [{ type: String }]
+}, {
+  timestamps: true
+});
+
+// Creates a geospatial index so we can query cars "near" a user's map location
+carSchema.index({ location: '2dsphere' });
+
+const Car = mongoose.model('Car', carSchema);
+module.exports = Car;

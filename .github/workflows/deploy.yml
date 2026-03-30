@@ -1,0 +1,46 @@
+name: 🚀 LuxeDrive Auto Deploy
+
+on:
+  push:
+    branches:
+      - main  # Triggers on every push to the main branch
+
+jobs:
+  deploy:
+    name: Deploy to AWS Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ✅ Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔐 SSH into Server & Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USER }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          port: 22
+          script: |
+            echo "🚀 Starting LuxeDrive Deployment..."
+            cd /var/www/luxe-drive
+            
+            echo "📥 Pulling latest code from GitHub..."
+            git pull origin main
+            
+            echo "📦 Installing backend dependencies..."
+            cd backend
+            npm install --omit=dev
+            cd ..
+            
+            echo "🏗️ Building React frontend..."
+            cd frontend
+            npm install
+            npm run build
+            cd ..
+            
+            echo "♻️ Restarting backend with PM2..."
+            pm2 restart luxedrive-backend || pm2 start backend/server.js --name luxedrive-backend
+            pm2 save
+            
+            echo "✅ Deployment complete! LuxeDrive is live."
