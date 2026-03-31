@@ -73,6 +73,9 @@ const Fleet = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
+              carId: car._id,
+              pricePerDay: car.pricePerDay,
+              rentalDays: 1,
             }, config);
 
             if (verifyRes.data.success) {

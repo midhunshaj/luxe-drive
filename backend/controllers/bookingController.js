@@ -8,17 +8,27 @@ const razorpay = new Razorpay({
   key_secret: (process.env.RAZORPAY_KEY_SECRET || 'dummy_secret').trim(),
 });
 
-// @desc    Generate a Razorpay Order 
+// @desc    Generate a Razorpay Order (does NOT save booking yet — only after verified payment)
 const createCheckoutSession = async (req, res) => {
   try {
-    const { carId, pricePerDay } = req.body;
-    const rentalDays = 1;
-    const totalPaiseAmount = (pricePerDay * 100) * rentalDays;
+    const { carId, pricePerDay, rentalDays = 1 } = req.body;
+
+    if (!carId || !pricePerDay) {
+      return res.status(400).json({ message: 'Missing required fields: carId or pricePerDay' });
+    }
+
+    const totalPaiseAmount = Math.round(pricePerDay * 100 * rentalDays);
 
     const options = {
       amount: totalPaiseAmount,
       currency: "INR",
-      receipt: `rcpt_${Date.now()}`, 
+      receipt: `rcpt_${Date.now()}`,
+      notes: {
+        carId: carId.toString(),
+        pricePerDay: pricePerDay.toString(),
+        rentalDays: rentalDays.toString(),
+        userId: req.user._id.toString(),
+      }
     };
 
     console.log("🟢 API SECURE GATEWAY: Hitting Razorpay servers with key: " + razorpay.key_id);
@@ -27,34 +37,27 @@ const createCheckoutSession = async (req, res) => {
 
     if (!order) return res.status(500).send("Razorpay Network Error");
 
-    const startDate = new Date();
-    const endDate = new Date(startDate.getTime() + rentalDays * 24 * 60 * 60 * 1000);
-
-    // Save the pending booking to the database
-    await Booking.create({
-      user: req.user._id,
-      car: carId,
-      startDate: startDate,
-      endDate: endDate,
-      totalCost: pricePerDay * rentalDays,
-      paymentStatus: 'pending',
-      razorpayOrderId: order.id,
-      status: 'active'
-    });
-
+    // ✅ DO NOT create booking here — only create after payment is verified
     res.json(order);
 
   } catch (error) {
     console.error("🚨🚨🚨 FATAL NODEJS RAZORPAY FAILURE 🚨🚨🚨");
     console.error("Exact Reason: ", error);
-    res.status(500).json({ message: 'Razorpay Gateway Blocked Request', error: error });
+    res.status(500).json({ message: 'Razorpay Gateway Blocked Request', error: error.message });
   }
 };
 
-// @desc    Verify the encrypted Razorpay Transaction Signature
+// @desc    Verify the encrypted Razorpay Transaction Signature & CREATE the booking record
 const verifyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      carId,
+      pricePerDay,
+      rentalDays = 1,
+    } = req.body;
 
     const sign = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSign = crypto
@@ -62,16 +65,31 @@ const verifyPayment = async (req, res) => {
       .update(sign.toString())
       .digest("hex");
 
-    if (razorpay_signature === expectedSign) {
-      await Booking.findOneAndUpdate(
-        { razorpayOrderId: razorpay_order_id },
-        { paymentStatus: 'paid', razorpayPaymentId: razorpay_payment_id }
-      );
-      res.status(200).json({ message: "Payment verified successfully", success: true });
-    } else {
-      res.status(400).json({ message: "Invalid signature", success: false });
+    if (razorpay_signature !== expectedSign) {
+      return res.status(400).json({ message: "Invalid signature — payment tampered", success: false });
     }
+
+    // ✅ Signature is valid — NOW create the confirmed booking record
+    const startDate = new Date();
+    const endDate = new Date(startDate.getTime() + rentalDays * 24 * 60 * 60 * 1000);
+
+    const booking = await Booking.create({
+      user: req.user._id,
+      car: carId,
+      startDate,
+      endDate,
+      totalCost: pricePerDay * rentalDays,
+      paymentStatus: 'paid',
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
+      status: 'active'
+    });
+
+    console.log("✅ Booking confirmed and saved:", booking._id);
+    res.status(200).json({ message: "Payment verified successfully", success: true, bookingId: booking._id });
+
   } catch (error) {
+    console.error("🚨 verifyPayment error:", error);
     res.status(500).json({ message: error.message, success: false });
   }
 };
