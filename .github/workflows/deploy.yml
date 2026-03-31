@@ -5,6 +5,9 @@ on:
     branches:
       - main  # Triggers on every push to the main branch
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Opt into Node.js 24 to fix deprecation warning
+
 jobs:
   deploy:
     name: Deploy to AWS Server
@@ -12,10 +15,10 @@ jobs:
 
     steps:
       - name: ✅ Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: 🔐 SSH into Server & Deploy
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.AWS_HOST }}
           username: ${{ secrets.AWS_USER }}
@@ -24,23 +27,23 @@ jobs:
           script: |
             echo "🚀 Starting LuxeDrive Deployment..."
             cd /var/www/luxe-drive
-            
+
             echo "📥 Pulling latest code from GitHub..."
             git pull origin main
-            
+
             echo "📦 Installing backend dependencies..."
             cd backend
             npm install --omit=dev
             cd ..
-            
+
             echo "🏗️ Building React frontend..."
             cd frontend
             npm install
             npm run build
             cd ..
-            
+
             echo "♻️ Restarting backend with PM2..."
             pm2 restart luxedrive-backend || pm2 start backend/server.js --name luxedrive-backend
             pm2 save
-            
+
             echo "✅ Deployment complete! LuxeDrive is live."
