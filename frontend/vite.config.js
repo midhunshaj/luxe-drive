@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
-    allowedHosts: 'all',  // Allow midhunshaj.in and any other host
+    allowedHosts: true,  // Allow all hosts including midhunshaj.in
     // This Proxy is incredibly important. It allows our React Frontend 
     // to secretly communicate with our Node.js Backend without CORS errors!
     proxy: {
