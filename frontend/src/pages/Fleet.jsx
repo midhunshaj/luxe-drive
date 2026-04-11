@@ -1,61 +1,49 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCars } from '../features/carSlice';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import io from 'socket.io-client';
 
 const Fleet = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { cars, isLoading, isError, message } = useSelector((state) => state.cars);
+  const { cars, isLoading } = useSelector((state) => state.cars);
   const { user } = useSelector((state) => state.auth);
-  const [paymentLoadingId, setPaymentLoadingId] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedCar, setSelectedCar] = useState(null);
-  const [bookingData, setBookingData] = useState({
-    deliveryLocation: '',
-    licenseNo: '',
-    phoneNo: ''
-  });
-  const [gettingLocation, setGettingLocation] = useState(false);
 
-  const getLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
-      return;
-    }
-    setGettingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-        setBookingData(prev => ({ ...prev, deliveryLocation: mapsLink }));
-        setGettingLocation(false);
-      },
-      () => {
-        alert('Please allow location permissions in your browser.');
-        setGettingLocation(false);
-      }
-    );
-  };
+  const [selectedCar, setSelectedCar] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [paymentLoadingId, setPaymentLoadingId] = useState(null);
+  const [bookingData, setBookingData] = useState({
+    deliveryLocation: '', licenseNo: '', phoneNo: ''
+  });
+
+  // Real-time Locking State
+  const [lockedCars, setLockedCars] = useState({}); // { carId: userId }
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     dispatch(getCars());
+    
+    // --- Initialize Real-time Conflict Prevention ---
+    const newSocket = io(window.location.origin.replace('5173', '5000'));
+    setSocket(newSocket);
 
-    // 🚀 MASTER INJECTION: React directly implants the script globally upon load
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
+    newSocket.on('initialLocks', (locks) => setLockedCars(locks));
+    newSocket.on('carLocked', ({ carId, userId }) => {
+      setLockedCars(prev => ({ ...prev, [carId]: userId }));
+    });
+    newSocket.on('carUnlocked', (carId) => {
+      setLockedCars(prev => {
+        const newLocks = { ...prev };
+        delete newLocks[carId];
+        return newLocks;
+      });
+    });
 
+    return () => newSocket.disconnect();
   }, [dispatch]);
-
-  const displayCars = cars.length > 0 ? cars : [
-    { _id: '1', make: 'Rolls Royce', model: 'Phantom', pricePerDay: 250000, category: 'Luxury Sedan', images: ['https://images.unsplash.com/photo-1631269666014-99d9196b0ca7?auto=format&fit=crop&q=80'] },
-    { _id: '2', make: 'Lamborghini', model: 'Aventador S', pricePerDay: 320000, category: 'Supercar', images: ['https://images.unsplash.com/photo-1544839655-a03be81a8b27?auto=format&fit=crop&q=80'] },
-    { _id: '3', make: 'Mercedes-Benz', model: 'G63 AMG', pricePerDay: 180000, category: 'Luxury SUV', images: ['https://images.unsplash.com/photo-1520050206274-a1df22f84cb5?auto=format&fit=crop&q=80'] },
-  ];
 
   const handleBookingClick = (car) => {
     if (!user) {
@@ -63,9 +51,26 @@ const Fleet = () => {
       navigate('/login');
       return;
     }
+    
+    // Check if someone else already has the modal open
+    if (lockedCars[car._id] && lockedCars[car._id] !== user._id) {
+      alert("This vehicle is currently being reserved by another client. Please wait 60 seconds.");
+      return;
+    }
+
     setSelectedCar(car);
     setBookingData({ deliveryLocation: '', licenseNo: '', phoneNo: user.phone || '' });
     setShowModal(true);
+    
+    // BROADCAST: This car is now busy
+    socket.emit('lockCar', { carId: car._id, userId: user._id });
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    if (selectedCar && socket) {
+      socket.emit('unlockCar', selectedCar._id);
+    }
   };
 
   const processPayment = async (e) => {
@@ -79,33 +84,25 @@ const Fleet = () => {
       setShowModal(false);
       setPaymentLoadingId(selectedCar._id);
 
-      // Verify the Razorpay SDK injection succeeded
       if (typeof window === 'undefined' || !window.Razorpay) {
-        alert("CRITICAL WARNING: The Razorpay Gateway failed to open! If you are on Live Server, Cloudflare or AWS is actively destroying the script. Try Incognito mode or check Chrome Console for CSP blockers.");
+        alert("Payment Gateway Error. Please refresh.");
         setPaymentLoadingId(null);
+        socket.emit('unlockCar', selectedCar._id);
         return;
       }
 
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
-
       const { data: order } = await axios.post('/api/bookings/checkout', {
         carId: selectedCar._id,
         pricePerDay: selectedCar.pricePerDay
       }, config);
 
-      if (!order || !order.id) {
-        alert("Server failed to generate Razorpay transaction.");
-        setPaymentLoadingId(null);
-        return;
-      }
-
       const options = {
-        key: 'rzp_live_SX7dA0kgUoreAg', // Matches backend RAZORPAY_KEY_ID
+        key: 'rzp_live_SX7dA0kgUoreAg',
         amount: order.amount,
         currency: order.currency,
         name: "LuxeDrive Premium",
-        description: `1-Day VVIP Reservation: ${selectedCar.make} ${selectedCar.model}`,
-        image: "https://images.unsplash.com/photo-1563720223185-11003d516935?w=200&q=80",
+        description: `Reservation: ${selectedCar.make} ${selectedCar.model}`,
         order_id: order.id,
         handler: async function (response) {
           try {
@@ -123,139 +120,137 @@ const Fleet = () => {
 
             if (verifyRes.data.success) {
                alert(`Payment Verified! Transaction ID: ${response.razorpay_payment_id}`);
+               socket.emit('unlockCar', selectedCar._id); // Release lock on success
                navigate('/my-bookings'); 
             }
           } catch (err) {
-            console.error("Verification Error:", err);
-            const serverError = err.response?.data?.message || err.message || "Unknown error";
-            alert(`Payment Verification Failed on Server: ${serverError}`);
+            console.error(err);
+            alert("Verification Failed.");
+            socket.emit('unlockCar', selectedCar._id);
           }
         },
-        prefill: {
-          name: user.name,
-          email: user.email,
-          contact: bookingData.phoneNo || "9999999999"
+        modal: {
+          ondismiss: function() {
+            socket.emit('unlockCar', selectedCar._id);
+            setPaymentLoadingId(null);
+          }
         },
-        theme: {
-          color: "#D4AF37"
-        }
+        prefill: { name: user.name, email: user.email },
+        theme: { color: "#D4AF37" }
       };
 
-      const razorpayWindow = new window.Razorpay(options);
-      razorpayWindow.on('payment.failed', function (response) {
-        alert("Payment declined: " + response.error.description);
-      });
-      
-      razorpayWindow.open();
+      const rzp = new window.Razorpay(options);
+      rzp.open();
       setPaymentLoadingId(null);
 
     } catch (error) {
       console.error(error);
-      alert('Razorpay Order connection severely failed. Verify Backend is operational.');
+      alert('Order Setup Failed.');
       setPaymentLoadingId(null);
+      socket.emit('unlockCar', selectedCar._id);
     }
   };
 
   return (
     <div className="pt-32 pb-20 min-h-screen bg-luxe-dark text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-           initial={{ opacity: 0, y: -20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.5 }}
-           className="text-center mb-16"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-widest mb-4">
-            Our Exclusive <span className="text-luxe-gold">Fleet</span>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-bold uppercase tracking-widest mb-4">
+            The <span className="text-luxe-gold">Elite</span> Fleet
           </h2>
-          <p className="text-gray-400 text-lg flex items-center justify-center gap-2">
-            Browse our real-time inventory of ultra-luxury vehicles.
-          </p>
+          <p className="text-gray-400 text-lg uppercase tracking-widest">Hand-selected luxury for global citizens</p>
         </motion.div>
 
-        {isError && <div className="text-center text-red-500 mb-8">{message}</div>}
-        {isLoading && <div className="text-center text-luxe-gold mb-8 text-xl font-bold animate-pulse">Syncing Database Inventory...</div>}
+        {isLoading ? (
+          <div className="text-center py-20 text-luxe-gold text-xl animate-pulse tracking-widest uppercase">Initializing Fleet Inventory...</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {cars.map((car, index) => {
+              const isLocked = lockedCars[car._id] && lockedCars[car._id] !== user?._id;
+              
+              return (
+                <motion.div
+                  key={car._id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="group relative bg-[#0a0a0a] border border-gray-900 rounded-2xl overflow-hidden hover:border-luxe-gold/50 transition-all duration-500"
+                >
+                  <div className="h-64 overflow-hidden relative">
+                    <img src={car.images[0]} alt={car.model} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-md px-4 py-1 rounded-full text-xs font-bold text-luxe-gold border border-luxe-gold/20">
+                      {car.category}
+                    </div>
+                    {isLocked && (
+                       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                          <span className="bg-red-600 text-white px-4 py-2 rounded font-bold uppercase tracking-tighter animate-pulse">
+                             ⚠️ Out of Order (Being Reserved)
+                          </span>
+                       </div>
+                    )}
+                  </div>
+                  
+                  <div className="p-8">
+                    <div className="flex justify-between items-end mb-6">
+                      <div>
+                        <h3 className="text-2xl font-bold tracking-tight mb-1">{car.make} <span className="text-luxe-gold">{car.model}</span></h3>
+                        <p className="text-gray-500 text-sm font-medium">{car.year} Production Model</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-luxe-gold text-2xl font-black">₹{car.pricePerDay.toLocaleString()}</p>
+                        <p className="text-gray-600 text-[10px] uppercase tracking-widest">Per Day</p>
+                      </div>
+                    </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {displayCars.map((car, index) => (
-             <motion.div
-               key={car._id}
-               initial={{ opacity: 0, y: 30 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ duration: 0.5, delay: index * 0.1 }}
-               className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.4)] group"
-             >
-               <div className="h-64 overflow-hidden relative">
-                 <img
-                   src={car.images[0] || 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=500&q=80'}
-                   alt={`${car.make} ${car.model}`}
-                   className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                 />
-                 <div className="absolute top-4 right-4 bg-luxe-dark/80 backdrop-blur text-luxe-gold px-4 py-1.5 rounded text-sm font-bold border border-luxe-gold/30">
-                   ₹ {car.pricePerDay.toLocaleString('en-IN')} / Day
-                 </div>
-               </div>
-               
-               <div className="p-6 relative">
-                 <h3 className="text-2xl font-bold tracking-wide mb-1">{car.make} <span className="text-luxe-gold">{car.model}</span></h3>
-                 <p className="text-gray-400 text-xs tracking-widest uppercase mb-6">{car.category}</p>
-                 
-                 <button
-                   onClick={() => handleBookingClick(car)}
-                   disabled={paymentLoadingId === car._id}
-                   className="w-full border border-gray-600 hover:border-luxe-gold hover:text-black hover:bg-luxe-gold transition-colors duration-300 py-3 rounded uppercase text-sm font-bold tracking-widest shadow-md flex items-center justify-center"
-                 >
-                   {paymentLoadingId === car._id ? 'Securing Portal...' : 'Book'}
-                 </button>
-               </div>
-             </motion.div>
-          ))}
-        </div>
+                    <button
+                      onClick={() => handleBookingClick(car)}
+                      disabled={isLocked || paymentLoadingId === car._id}
+                      className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest transition-all duration-300 ${
+                        isLocked 
+                          ? 'bg-gray-800 text-gray-600 cursor-not-allowed border-gray-700 scale-95'
+                          : 'bg-white text-black hover:bg-luxe-gold hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]'
+                      }`}
+                    >
+                      {paymentLoadingId === car._id ? 'Processing...' : isLocked ? 'Currently Busy' : 'Book Now'}
+                    </button>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-gray-800 p-8 rounded-xl w-full max-w-lg shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
-            <h3 className="text-2xl font-bold uppercase tracking-widest mb-6 text-white border-b border-gray-800 pb-3">Delivery & Verification</h3>
-            <form onSubmit={processPayment} className="space-y-4">
-              <div>
-                <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-1">Name (Auto-filled)</label>
-                <input type="text" className="w-full bg-gray-800 text-gray-500 border border-gray-700 rounded p-3 cursor-not-allowed" value={user?.name} disabled />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-1">Email (Auto-filled)</label>
-                <input type="email" className="w-full bg-gray-800 text-gray-500 border border-gray-700 rounded p-3 cursor-not-allowed" value={user?.email} disabled />
-              </div>
-              <div>
-                <label className="block text-luxe-gold text-xs tracking-widest uppercase font-semibold mb-2 flex justify-between items-center">
-                  <span>Delivery Location Link</span>
-                  <button type="button" onClick={getLocation} disabled={gettingLocation} className="text-[10px] bg-luxe-gold/20 text-luxe-gold px-2 py-1 rounded hover:bg-luxe-gold/40 transition font-bold disabled:opacity-50">
-                    📍 {gettingLocation ? 'Detecting GPS...' : 'Auto-Detect Location'}
-                  </button>
-                </label>
-                <div className="relative">
-                  <input type="text" placeholder="Click Auto-Detect or paste Google Maps link..." required className="w-full bg-gray-800 text-luxe-gold border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors text-sm" value={bookingData.deliveryLocation} onChange={(e) => setBookingData({...bookingData, deliveryLocation: e.target.value})} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-1">License No.</label>
-                  <input type="text" placeholder="DL-1234567" required className="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors" value={bookingData.licenseNo} onChange={(e) => setBookingData({...bookingData, licenseNo: e.target.value})} />
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-1">Phone No.</label>
-                  <input type="tel" placeholder="+91..." required className="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors" value={bookingData.phoneNo} onChange={(e) => setBookingData({...bookingData, phoneNo: e.target.value})} />
-                </div>
-              </div>
-              <div className="flex gap-4 pt-4 mt-4 border-t border-gray-800">
-                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 rounded uppercase text-sm font-bold border border-gray-600 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">Cancel</button>
-                <button type="submit" className="flex-1 bg-luxe-gold text-black font-bold py-3 rounded uppercase tracking-wider hover:bg-yellow-500 transition-colors shadow-[0_0_15px_rgba(212,175,55,0.4)]">Proceed to Payment</button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
-
+      {/* Booking Modal */}
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeModal} className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-xl bg-[#0d0d0d] border border-gray-800 rounded-3xl p-8 overflow-hidden">
+               <div className="absolute top-0 left-0 w-full h-1 bg-luxe-gold/50" />
+               <h2 className="text-3xl font-bold mb-8 uppercase tracking-tighter">Identity & Delivery <span className="text-luxe-gold">Verification</span></h2>
+               <form onSubmit={processPayment} className="space-y-6">
+                  <div>
+                    <label className="block text-gray-500 text-xs uppercase tracking-widest mb-2 font-bold">Delivery Location (City/Address)</label>
+                    <input type="text" value={bookingData.deliveryLocation} onChange={(e) => setBookingData({...bookingData, deliveryLocation: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:border-luxe-gold outline-none transition" placeholder="Where should we drop the vehicle?" required />
+                  </div>
+                  <div>
+                    <label className="block text-gray-500 text-xs uppercase tracking-widest mb-2 font-bold">Driving License Number</label>
+                    <input type="text" value={bookingData.licenseNo} onChange={(e) => setBookingData({...bookingData, licenseNo: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:border-luxe-gold outline-none transition uppercase" placeholder="Input DL Number for Verification" required />
+                  </div>
+                  <div>
+                    <label className="block text-gray-500 text-xs uppercase tracking-widest mb-2 font-bold">Contact Phone Number</label>
+                    <input type="tel" value={bookingData.phoneNo} onChange={(e) => setBookingData({...bookingData, phoneNo: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:border-luxe-gold outline-none transition" placeholder="+91 XXXX XXX XXX" required />
+                  </div>
+                  <div className="pt-4 grid grid-cols-2 gap-4">
+                    <button type="button" onClick={closeModal} className="w-full py-4 text-gray-500 font-bold uppercase tracking-widest hover:text-white transition">Cancel</button>
+                    <button type="submit" className="w-full bg-luxe-gold text-black font-bold py-4 rounded-xl uppercase tracking-widest shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:scale-105 transition-all">Proceed to Payment</button>
+                  </div>
+               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

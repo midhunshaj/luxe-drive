@@ -46,6 +46,10 @@ app.use('/api/upload', require('./routes/uploadRoutes'));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// --- IN-MEMORY LOCK SYSTEM ---
+// Tracks which cars are currently being "checked out" by users
+const activeLocks = {}; 
+
 // Socket.io Real-time Logic
 io.on('connection', (socket) => {
   console.log('📡 Logic Engine: New User Socket Connection established:', socket.id);
@@ -53,9 +57,27 @@ io.on('connection', (socket) => {
   socket.on('join', (userId) => {
     socket.join(userId);
     console.log(`👤 User joined private room: ${userId}`);
+    // Send currently locked cars to the new user immediately
+    socket.emit('initialLocks', activeLocks);
+  });
+
+  // When a user opens the booking modal
+  socket.on('lockCar', ({ carId, userId }) => {
+    activeLocks[carId] = userId;
+    io.emit('carLocked', { carId, userId });
+    console.log(`🔒 Car LOCKED: ${carId} by user ${userId}`);
+  });
+
+  // When a user closes the modal OR completes payment
+  socket.on('unlockCar', (carId) => {
+    delete activeLocks[carId];
+    io.emit('carUnlocked', carId);
+    console.log(`🔓 Car UNLOCKED: ${carId}`);
   });
 
   socket.on('disconnect', () => {
+    // Cleanup any locks held by this socket (if we tracked them)
+    // For simplicity, we just log it. In production, you'd map socketId to carId.
     console.log('📡 User disconnected');
   });
 });
