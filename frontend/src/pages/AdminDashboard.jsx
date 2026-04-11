@@ -30,14 +30,8 @@ const AdminDashboard = () => {
       alert("Unauthorized Access: Only Administrators can enter the Operations Control Panel.");
       navigate('/');
     }
-
-    if (isError) { alert("Upload Failed: " + message); }
-    if (isSuccess) {
-      alert("Vehicle Successfully Deployed to Global Fleet Database! ✅");
-      setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
-    }
     dispatch(reset());
-  }, [user, navigate, isSuccess, isError, message, dispatch]);
+  }, [user, navigate, dispatch]);
 
   useEffect(() => {
     if (activeTab === 'bookings' && user && user.role === 'admin') {
@@ -141,7 +135,15 @@ const AdminDashboard = () => {
         alert("Failed to update vehicle");
       }
     } else {
-      dispatch(createCar(carPack));
+      dispatch(createCar(carPack))
+        .unwrap()
+        .then(() => {
+          alert("Vehicle Successfully Deployed to Global Fleet Database! ✅");
+          setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
+        })
+        .catch((err) => {
+          alert(`Upload Failed: ${err}`);
+        });
     }
   };
 
