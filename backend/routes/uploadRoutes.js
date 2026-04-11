@@ -1,7 +1,14 @@
 const path = require('path');
 const express = require('express');
 const multer = require('multer');
+const fs = require('fs');
 const router = express.Router();
+
+// Auto-create uploads directory to prevent crashes on AWS/New Machines
+const uploadDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {

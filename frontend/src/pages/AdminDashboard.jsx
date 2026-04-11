@@ -68,7 +68,8 @@ const AdminDashboard = () => {
       alert(`Booking ${status} successfully!`);
     } catch (error) {
       console.error(error);
-      alert("Failed to update status");
+      const backendError = error.response?.data?.message || error.message || "Unknown error";
+      alert(`Failed to update status: ${backendError}`);
     }
   };
 
