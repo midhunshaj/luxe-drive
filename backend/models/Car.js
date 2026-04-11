@@ -7,6 +7,7 @@ const carSchema = new mongoose.Schema({
   category: { type: String, required: true },
   pricePerDay: { type: Number, required: true },
   availabilityStatus: { type: String, enum: ['available', 'rented', 'maintenance'], default: 'available' },
+  countInStock: { type: Number, required: true, default: 1 },
   // GeoJSON data structure for Map Integration
   location: {
     type: { type: String, default: 'Point' },

@@ -195,6 +195,9 @@ const Fleet = () => {
                       <div>
                         <h3 className="text-2xl font-bold tracking-tight mb-1">{car.make} <span className="text-luxe-gold">{car.model}</span></h3>
                         <p className="text-gray-500 text-sm font-medium">{car.year} Production Model</p>
+                        <p className={`mt-2 text-xs font-bold uppercase tracking-widest ${car.countInStock > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          Availability: {car.countInStock || 0} Units Remain
+                        </p>
                       </div>
                       <div className="text-right">
                         <p className="text-luxe-gold text-2xl font-black">₹{car.pricePerDay.toLocaleString()}</p>
@@ -204,14 +207,14 @@ const Fleet = () => {
 
                     <button
                       onClick={() => handleBookingClick(car)}
-                      disabled={isLocked || paymentLoadingId === car._id}
+                      disabled={isLocked || paymentLoadingId === car._id || (car.countInStock <= 0)}
                       className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest transition-all duration-300 ${
-                        isLocked 
+                        (isLocked || car.countInStock <= 0)
                           ? 'bg-gray-800 text-gray-600 cursor-not-allowed border-gray-700 scale-95'
                           : 'bg-white text-black hover:bg-luxe-gold hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]'
                       }`}
                     >
-                      {paymentLoadingId === car._id ? 'Processing...' : isLocked ? 'Currently Busy' : 'Book Now'}
+                      {paymentLoadingId === car._id ? 'Processing...' : (car.countInStock <= 0 ? 'Out of Stock' : (isLocked ? 'Currently Busy' : 'Book Now'))}
                     </button>
                   </div>
                 </motion.div>

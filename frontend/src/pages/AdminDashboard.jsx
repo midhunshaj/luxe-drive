@@ -14,10 +14,10 @@ const AdminDashboard = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   const [formData, setFormData] = useState({
-    make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139'
+    make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, imageUrl: '', longitude: '77.2090', latitude: '28.6139'
   });
 
-  const { make, model, year, category, pricePerDay, imageUrl, longitude, latitude } = formData;
+  const { make, model, year, category, pricePerDay, countInStock, imageUrl, longitude, latitude } = formData;
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -108,6 +108,7 @@ const AdminDashboard = () => {
     setEditCarId(car._id);
     setFormData({
       make: car.make, model: car.model, year: car.year, category: car.category, pricePerDay: car.pricePerDay, 
+      countInStock: car.countInStock || 1,
       imageUrl: car.images[0] || '', longitude: car.location?.coordinates[0] || '77.2090', latitude: car.location?.coordinates[1] || '28.6139'
     });
     setActiveTab('deploy');
@@ -119,6 +120,7 @@ const AdminDashboard = () => {
 
     const carPack = {
       make, model, year: Number(year), category, pricePerDay: Number(pricePerDay),
+      countInStock: Number(countInStock),
       images: [imageUrl],
       location: { type: 'Point', coordinates: [Number(longitude), Number(latitude)] }
     };
@@ -130,7 +132,7 @@ const AdminDashboard = () => {
         setSuccessMsg("Vehicle updated successfully! ✅");
         setTimeout(() => setSuccessMsg(''), 4000);
         setEditCarId(null);
-        setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
+        setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
         dispatch(getCars());
         setActiveTab('fleet');
       } catch(err) {
@@ -142,7 +144,7 @@ const AdminDashboard = () => {
         .then(() => {
           setSuccessMsg("Vehicle Successfully Deployed to Global Fleet! ✅");
           setTimeout(() => setSuccessMsg(''), 4000);
-          setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
+          setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
         })
         .catch((err) => {
           alert(`Upload Failed: ${err}`);
@@ -210,6 +212,10 @@ const AdminDashboard = () => {
                  <input type="number" name="pricePerDay" value={pricePerDay} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold text-luxe-gold font-bold" placeholder="e.g. 250000" required />
               </div>
               <div>
+                 <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">Inventory Quantity (Available)</label>
+                 <input type="number" name="countInStock" value={countInStock} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold text-white" placeholder="1" required />
+              </div>
+              <div>
                  <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">High-Res Gallery Image {uploadingImage && <span className="text-luxe-gold">(Uploading...)</span>}</label>
                  <input type="file" accept="image/*" onChange={uploadFileHandler} className="w-full bg-gray-800 border border-gray-700 rounded p-2 focus:outline-none focus:border-luxe-gold text-white" />
                  {imageUrl && <div className="mt-2 text-xs text-green-400 break-all">✅ Logged: {imageUrl}</div>}
@@ -272,6 +278,7 @@ const AdminDashboard = () => {
                   <th className="py-4 px-4">Img</th>
                   <th className="py-4 px-4">Make / Model</th>
                   <th className="py-4 px-4">Segment</th>
+                  <th className="py-4 px-4">Stock</th>
                   <th className="py-4 px-4">Rate (INR)</th>
                   <th className="py-4 px-4">Actions</th>
                 </tr>
@@ -282,7 +289,8 @@ const AdminDashboard = () => {
                     <td className="py-2 px-4"><img src={car.images[0]} alt="car" className="w-12 h-12 object-cover rounded shadow" /></td>
                     <td className="py-2 px-4 font-bold">{car.make} <span className="text-luxe-gold">{car.model}</span> ({car.year})</td>
                     <td className="py-2 px-4 text-gray-400">{car.category}</td>
-                    <td className="py-2 px-4 font-mono font-bold">₹{car.pricePerDay.toLocaleString()}</td>
+                    <td className="py-2 px-4 italic font-bold text-gray-300">{car.countInStock || 0} In Stock</td>
+                    <td className="py-2 px-4 font-mono font-bold text-luxe-gold">₹{car.pricePerDay.toLocaleString()}</td>
                     <td className="py-2 px-4">
                       <div className="flex gap-2">
                         <button onClick={() => editHandler(car)} className="px-3 py-1 bg-yellow-900 hover:bg-yellow-800 text-yellow-100 rounded text-xs font-bold uppercase transition">Edit</button>
