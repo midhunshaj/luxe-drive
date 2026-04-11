@@ -105,7 +105,7 @@ const MyBookings = () => {
                           booking.dealerStatus === 'rejected' ? 'text-red-400 bg-red-900/30 border border-red-500' :
                           'text-yellow-400 bg-yellow-900/30 border border-yellow-500'
                         }`}>
-                          {booking.dealerStatus || 'Pending'}
+                          {booking.dealerStatus === 'accepted' ? 'Booked ✅' : booking.dealerStatus || 'Pending'}
                         </span>
                       </div>
                     </div>

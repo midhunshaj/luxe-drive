@@ -1,6 +1,7 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Booking = require('../models/Booking');
+const nodemailer = require('nodemailer');
 
 // 🚀 CRITICAL FIX: Trim whitespace off the .env secrets to completely prevent Linux copy-paste HTTP 401 Unauthorized errors!
 const razorpay = new Razorpay({
@@ -125,11 +126,44 @@ const getAllBookings = async (req, res) => {
 const updateBookingStatus = async (req, res) => {
   try {
     const { dealerStatus } = req.body;
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id).populate('user').populate('car');
 
     if (booking) {
       booking.dealerStatus = dealerStatus;
       const updatedBooking = await booking.save();
+
+      // Email Dispatch System
+      if (dealerStatus === 'accepted' && booking.user?.email) {
+        try {
+          const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: process.env.EMAIL_USER || 'dummy@gmail.com',
+              pass: process.env.EMAIL_PASS || 'dummy'
+            }
+          });
+
+          const mailOptions = {
+            from: `"LuxeDrive Reservations" <${process.env.EMAIL_USER || 'dummy@gmail.com'}>`,
+            to: booking.user.email,
+            subject: 'LuxeDrive Booking Confirmation ✅',
+            html: `
+              <h2>Booking Successful! ✅</h2>
+              <p>Dear ${booking.user.name},</p>
+              <p>Your reservation for the <strong>${booking.car?.make} ${booking.car?.model}</strong> has been officially approved.</p>
+              <p>The vehicle will be delivered to you as soon as possible.</p>
+              <p>Ref ID: ${booking._id}</p>
+              <p>Thank you for choosing LuxeDrive.</p>
+            `
+          };
+
+          await transporter.sendMail(mailOptions);
+          console.log(`Confirmation Mail sent to ${booking.user.email}`);
+        } catch (mailError) {
+          console.error("Mail Error (Requires real credentials in .env): ", mailError.message);
+        }
+      }
+
       res.json(updatedBooking);
     } else {
       res.status(404).json({ message: 'Booking not found' });
