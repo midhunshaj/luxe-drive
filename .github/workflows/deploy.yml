@@ -27,11 +27,25 @@ jobs:
           debug: true
           script: |
             echo "🚀 Starting LuxeDrive Deployment..."
-            cd /website/luxe-drive
-
-            echo "📥 Force Syncing latest code from GitHub..."
-            git fetch --all
-            git reset --hard origin/main
+            
+            echo "🔧 Ensuring /website directory exists with correct permissions..."
+            sudo mkdir -p /website
+            sudo chown -R $USER:$USER /website
+            
+            if [ ! -d "/website/luxe-drive/.git" ]; then
+              echo "📥 LuxeDrive not found. Cloning freshly..."
+              cd /website
+              rm -rf luxe-drive
+              git clone https://github.com/midhunshaj/luxe-drive.git
+              cd luxe-drive
+            else
+              echo "📥 LuxeDrive found! Force Syncing latest code from GitHub..."
+              cd /website/luxe-drive
+              # Fix dubious ownership safe-directory crash
+              git config --global --add safe.directory /website/luxe-drive
+              git fetch --all
+              git reset --hard origin/main
+            fi
 
 
             echo "📦 Installing backend dependencies..."
@@ -46,6 +60,10 @@ jobs:
             cd ..
 
             echo "♻️ Restarting backend with PM2..."
+            if ! command -v pm2 &> /dev/null; then
+              echo "⚙️ PM2 not found natively. Installing PM2 globally..."
+              sudo npm install -g pm2
+            fi
             pm2 restart luxedrive-backend || pm2 start backend/server.js --name luxedrive-backend
             pm2 save
 
