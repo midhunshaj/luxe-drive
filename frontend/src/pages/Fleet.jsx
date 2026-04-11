@@ -126,7 +126,9 @@ const Fleet = () => {
                navigate('/my-bookings'); 
             }
           } catch (err) {
-            alert("Payment Verification Failed.");
+            console.error("Verification Error:", err);
+            const serverError = err.response?.data?.message || err.message || "Unknown error";
+            alert(`Payment Verification Failed on Server: ${serverError}`);
           }
         },
         prefill: {
