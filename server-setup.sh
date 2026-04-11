@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash midhunshaj
 # ============================================================
 #  LuxeDrive - One-Time Server Setup Script
 #  Run this ONCE on your AWS server to prepare it for CI/CD
