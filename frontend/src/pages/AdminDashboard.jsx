@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { createCar, reset } from '../features/carSlice';
+import { createCar, reset, getCars } from '../features/carSlice';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('deploy'); // 'deploy' | 'bookings'
+  const [activeTab, setActiveTab] = useState('deploy'); // 'deploy' | 'bookings' | 'fleet'
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [editCarId, setEditCarId] = useState(null);
 
   const [formData, setFormData] = useState({
     make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139'
@@ -20,7 +22,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   
   const { user } = useSelector((state) => state.auth);
-  const { isLoading, isError, isSuccess, message } = useSelector((state) => state.cars);
+  const { cars, isLoading, isError, isSuccess, message } = useSelector((state) => state.cars);
 
   useEffect(() => {
     // 1. Enterprise Security: Evict users who are NOT Admins immediately
@@ -52,7 +54,10 @@ const AdminDashboard = () => {
       };
       fetchBookings();
     }
-  }, [activeTab, user]);
+    if (activeTab === 'fleet' && user && user.role === 'admin') {
+      dispatch(getCars());
+    }
+  }, [activeTab, user, dispatch]);
 
   const updateDealerStatus = async (bookingId, status) => {
     try {
@@ -71,15 +76,71 @@ const AdminDashboard = () => {
     setFormData((prevState) => ({ ...prevState, [e.target.name]: e.target.value }));
   };
 
-  const onSubmit = (e) => {
+  const uploadFileHandler = async (e) => {
+    const file = e.target.files[0];
+    const uploadData = new FormData();
+    uploadData.append('image', file);
+    setUploadingImage(true);
+
+    try {
+      const config = { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${user.token}` } };
+      const { data } = await axios.post('/api/upload', uploadData, config);
+      setFormData((prev) => ({ ...prev, imageUrl: data }));
+      setUploadingImage(false);
+    } catch (error) {
+      console.error(error);
+      setUploadingImage(false);
+      alert("Image upload failed. Ensure /api/upload is accessible.");
+    }
+  };
+
+  const deleteHandler = async (id) => {
+    if (window.confirm("Are you sure you want to permanently delete this vehicle?")) {
+      try {
+        const config = { headers: { Authorization: `Bearer ${user.token}` } };
+        await axios.delete(`/api/cars/${id}`, config);
+        dispatch(getCars());
+        alert("Vehicle deleted safely.");
+      } catch (err) {
+        alert("Failed to delete vehicle");
+      }
+    }
+  };
+
+  const editHandler = (car) => {
+    setEditCarId(car._id);
+    setFormData({
+      make: car.make, model: car.model, year: car.year, category: car.category, pricePerDay: car.pricePerDay, 
+      imageUrl: car.images[0] || '', longitude: car.location?.coordinates[0] || '77.2090', latitude: car.location?.coordinates[1] || '28.6139'
+    });
+    setActiveTab('deploy');
+  };
+
+  const onSubmit = async (e) => {
     e.preventDefault();
-    // Reconstruct data to precisely match our robust MongoDB Mongoose Configuration
+    if (!imageUrl) return alert("Please upload an image first!");
+
     const carPack = {
       make, model, year: Number(year), category, pricePerDay: Number(pricePerDay),
       images: [imageUrl],
-      location: { type: 'Point', coordinates: [Number(longitude), Number(latitude)] } // Geocoded Map Integration Payload!
+      location: { type: 'Point', coordinates: [Number(longitude), Number(latitude)] }
     };
-    dispatch(createCar(carPack));
+
+    if (editCarId) {
+      try {
+        const config = { headers: { Authorization: `Bearer ${user.token}` } };
+        await axios.put(`/api/cars/${editCarId}`, carPack, config);
+        alert("Vehicle updated successfully!");
+        setEditCarId(null);
+        setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
+        dispatch(getCars());
+        setActiveTab('fleet');
+      } catch(err) {
+        alert("Failed to update vehicle");
+      }
+    } else {
+      dispatch(createCar(carPack));
+    }
   };
 
   return (
@@ -88,10 +149,16 @@ const AdminDashboard = () => {
         
         <div className="flex justify-center space-x-4 mb-8">
           <button 
-            onClick={() => setActiveTab('deploy')}
+            onClick={() => { setActiveTab('deploy'); setEditCarId(null); setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139' }); }}
             className={`px-8 py-3 rounded text-sm tracking-widest uppercase font-bold transition-all ${activeTab === 'deploy' ? 'bg-luxe-gold text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
           >
-            Deploy Vehicle
+            {editCarId ? 'Update Vehicle' : 'Deploy Vehicle'}
+          </button>
+          <button 
+            onClick={() => setActiveTab('fleet')}
+            className={`px-8 py-3 rounded text-sm tracking-widest uppercase font-bold transition-all ${activeTab === 'fleet' ? 'bg-luxe-gold text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+          >
+            Manage Fleet
           </button>
           <button 
             onClick={() => setActiveTab('bookings')}
@@ -107,7 +174,7 @@ const AdminDashboard = () => {
               <span className="text-luxe-gold">Admin</span> Operations Panel
             </h2>
 
-            <h3 className="text-xl font-medium tracking-wide mb-6">Deploy New Vehicle to Global Inventory</h3>
+            <h3 className="text-xl font-medium tracking-wide mb-6">{editCarId ? 'Update Existing Vehicle' : 'Deploy New Vehicle to Global Inventory'}</h3>
             
             <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -136,8 +203,9 @@ const AdminDashboard = () => {
                  <input type="number" name="pricePerDay" value={pricePerDay} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold text-luxe-gold font-bold" placeholder="e.g. 250000" required />
               </div>
               <div>
-                 <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">High-Res Gallery Image URL</label>
-                 <input type="text" name="imageUrl" value={imageUrl} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold text-white" placeholder="https://unsplash..." required />
+                 <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">High-Res Gallery Image {uploadingImage && <span className="text-luxe-gold">(Uploading...)</span>}</label>
+                 <input type="file" accept="image/*" onChange={uploadFileHandler} className="w-full bg-gray-800 border border-gray-700 rounded p-2 focus:outline-none focus:border-luxe-gold text-white" />
+                 {imageUrl && <div className="mt-2 text-xs text-green-400 break-all">✅ Logged: {imageUrl}</div>}
               </div>
               
               <div className="md:col-span-2 pt-4 border-t border-gray-800">
@@ -149,11 +217,44 @@ const AdminDashboard = () => {
               </div>
 
               <div className="md:col-span-2 mt-6">
-                 <button type="submit" disabled={isLoading} className="w-full bg-luxe-gold text-black font-bold py-4 rounded uppercase tracking-wider hover:bg-yellow-500 shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-50 transition-all">
-                   {isLoading ? 'Encrypting & Injecting into MongoDB...' : 'Upload Vehicle to Global Fleet'}
+                 <button type="submit" disabled={isLoading || uploadingImage} className="w-full bg-luxe-gold text-black font-bold py-4 rounded uppercase tracking-wider hover:bg-yellow-500 shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-50 transition-all">
+                   {isLoading ? 'Encrypting & Injecting into MongoDB...' : editCarId ? 'Update Vehicle Details' : 'Upload Vehicle to Global Fleet'}
                  </button>
               </div>
             </form>
+          </motion.div>
+        ) : activeTab === 'fleet' ? (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-gray-900 border border-gray-800 p-8 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-x-auto">
+             <h2 className="text-3xl font-bold uppercase tracking-widest mb-8 border-b border-gray-800 pb-4">
+              <span className="text-luxe-gold">Active</span> Vehicle Inventory
+            </h2>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-800 text-gray-400 text-xs uppercase tracking-widest">
+                  <th className="py-4 px-4">Img</th>
+                  <th className="py-4 px-4">Make / Model</th>
+                  <th className="py-4 px-4">Segment</th>
+                  <th className="py-4 px-4">Rate (INR)</th>
+                  <th className="py-4 px-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                {cars.map((car) => (
+                  <tr key={car._id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                    <td className="py-2 px-4"><img src={car.images[0]} alt="car" className="w-12 h-12 object-cover rounded shadow" /></td>
+                    <td className="py-2 px-4 font-bold">{car.make} <span className="text-luxe-gold">{car.model}</span> ({car.year})</td>
+                    <td className="py-2 px-4 text-gray-400">{car.category}</td>
+                    <td className="py-2 px-4 font-mono font-bold">₹{car.pricePerDay.toLocaleString()}</td>
+                    <td className="py-2 px-4">
+                      <div className="flex gap-2">
+                        <button onClick={() => editHandler(car)} className="px-3 py-1 bg-yellow-900 hover:bg-yellow-800 text-yellow-100 rounded text-xs font-bold uppercase transition">Edit</button>
+                        <button onClick={() => deleteHandler(car._id)} className="px-3 py-1 bg-red-900 hover:bg-red-800 text-red-100 rounded text-xs font-bold uppercase transition">Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </motion.div>
         ) : (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-gray-900 border border-gray-800 p-8 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-x-auto">
@@ -192,7 +293,13 @@ const AdminDashboard = () => {
                         {new Date(b.startDate).toLocaleDateString()}
                       </td>
                       <td className="py-4 px-4 text-xs">
-                        <div>📍 {b.deliveryLocation || '<none>'}</div>
+                        <div>
+                          📍 {b.deliveryLocation?.startsWith('http') ? (
+                            <a href={b.deliveryLocation} target="_blank" rel="noreferrer" className="text-luxe-gold hover:underline">View Map Link</a>
+                          ) : (
+                            b.deliveryLocation || '<none>'
+                          )}
+                        </div>
                         <div className="text-gray-500 pt-1">📞 {b.phoneNo || '<none>'}</div>
                         <div className="text-gray-500">💳 {b.licenseNo || '<none>'}</div>
                       </td>

@@ -18,6 +18,27 @@ const Fleet = () => {
     licenseNo: '',
     phoneNo: ''
   });
+  const [gettingLocation, setGettingLocation] = useState(false);
+
+  const getLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser');
+      return;
+    }
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        setBookingData(prev => ({ ...prev, deliveryLocation: mapsLink }));
+        setGettingLocation(false);
+      },
+      () => {
+        alert('Please allow location permissions in your browser.');
+        setGettingLocation(false);
+      }
+    );
+  };
 
   useEffect(() => {
     dispatch(getCars());
@@ -204,16 +225,15 @@ const Fleet = () => {
                 <input type="email" className="w-full bg-gray-800 text-gray-500 border border-gray-700 rounded p-3 cursor-not-allowed" value={user?.email} disabled />
               </div>
               <div>
-                <label className="block text-luxe-gold text-xs tracking-widest uppercase font-semibold mb-1 flex justify-between">
-                  <span>Delivery Location (Map API)</span>
-                  <span className="text-[10px] text-gray-500">📍 Auto-Detect</span>
+                <label className="block text-luxe-gold text-xs tracking-widest uppercase font-semibold mb-2 flex justify-between items-center">
+                  <span>Delivery Location Link</span>
+                  <button type="button" onClick={getLocation} disabled={gettingLocation} className="text-[10px] bg-luxe-gold/20 text-luxe-gold px-2 py-1 rounded hover:bg-luxe-gold/40 transition font-bold disabled:opacity-50">
+                    📍 {gettingLocation ? 'Detecting GPS...' : 'Auto-Detect Location'}
+                  </button>
                 </label>
-                {/* 🗺️ Map Simulation Widget */}
-                <div className="relative mb-2 w-full h-32 bg-gray-800 rounded border border-gray-700 overflow-hidden group hover:border-luxe-gold transition-colors">
-                  <iframe width="100%" height="100%" style={{border:0, filter:'invert(90%) hue-rotate(180deg)'}} loading="lazy" allowFullScreen src="https://maps.google.com/maps?q=luxury%20hotels&t=m&z=12&output=embed&iwloc=near"></iframe>
-                  <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+                <div className="relative">
+                  <input type="text" placeholder="Click Auto-Detect or paste Google Maps link..." required className="w-full bg-gray-800 text-luxe-gold border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors text-sm" value={bookingData.deliveryLocation} onChange={(e) => setBookingData({...bookingData, deliveryLocation: e.target.value})} />
                 </div>
-                <input type="text" placeholder="Drop a pin or type specific address..." required className="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors" value={bookingData.deliveryLocation} onChange={(e) => setBookingData({...bookingData, deliveryLocation: e.target.value})} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
