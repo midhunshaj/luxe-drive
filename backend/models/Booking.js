@@ -10,6 +10,10 @@ const bookingSchema = new mongoose.Schema({
   razorpayOrderId: { type: String },
   razorpayPaymentId: { type: String },
   status: { type: String, enum: ['active', 'completed', 'cancelled'], default: 'active' },
+  dealerStatus: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
+  deliveryLocation: { type: String },
+  licenseNo: { type: String },
+  phoneNo: { type: String },
   promoCode: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' },
   discountAmount: { type: Number, default: 0 }
 }, {

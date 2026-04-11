@@ -11,6 +11,13 @@ const Fleet = () => {
   const { cars, isLoading, isError, message } = useSelector((state) => state.cars);
   const { user } = useSelector((state) => state.auth);
   const [paymentLoadingId, setPaymentLoadingId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedCar, setSelectedCar] = useState(null);
+  const [bookingData, setBookingData] = useState({
+    deliveryLocation: '',
+    licenseNo: '',
+    phoneNo: ''
+  });
 
   useEffect(() => {
     dispatch(getCars());
@@ -29,15 +36,27 @@ const Fleet = () => {
     { _id: '3', make: 'Mercedes-Benz', model: 'G63 AMG', pricePerDay: 180000, category: 'Luxury SUV', images: ['https://images.unsplash.com/photo-1520050206274-a1df22f84cb5?auto=format&fit=crop&q=80'] },
   ];
 
-  const handleBookingClick = async (car) => {
+  const handleBookingClick = (car) => {
     if (!user) {
       alert("Please Sign In first to reserve an ultra-luxury vehicle.");
       navigate('/login');
       return;
     }
+    setSelectedCar(car);
+    setBookingData({ deliveryLocation: '', licenseNo: '', phoneNo: user.phone || '' });
+    setShowModal(true);
+  };
+
+  const processPayment = async (e) => {
+    e.preventDefault();
+    if (!bookingData.deliveryLocation || !bookingData.licenseNo || !bookingData.phoneNo) {
+      alert("Please fill in all details.");
+      return;
+    }
 
     try {
-      setPaymentLoadingId(car._id);
+      setShowModal(false);
+      setPaymentLoadingId(selectedCar._id);
 
       // Verify the Razorpay SDK injection succeeded
       if (typeof window === 'undefined' || !window.Razorpay) {
@@ -49,8 +68,8 @@ const Fleet = () => {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
 
       const { data: order } = await axios.post('/api/bookings/checkout', {
-        carId: car._id,
-        pricePerDay: car.pricePerDay
+        carId: selectedCar._id,
+        pricePerDay: selectedCar.pricePerDay
       }, config);
 
       if (!order || !order.id) {
@@ -64,7 +83,7 @@ const Fleet = () => {
         amount: order.amount,
         currency: order.currency,
         name: "LuxeDrive Premium",
-        description: `1-Day VVIP Reservation: ${car.make} ${car.model}`,
+        description: `1-Day VVIP Reservation: ${selectedCar.make} ${selectedCar.model}`,
         image: "https://images.unsplash.com/photo-1563720223185-11003d516935?w=200&q=80",
         order_id: order.id,
         handler: async function (response) {
@@ -73,9 +92,12 @@ const Fleet = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              carId: car._id,
-              pricePerDay: car.pricePerDay,
+              carId: selectedCar._id,
+              pricePerDay: selectedCar.pricePerDay,
               rentalDays: 1,
+              deliveryLocation: bookingData.deliveryLocation,
+              licenseNo: bookingData.licenseNo,
+              phoneNo: bookingData.phoneNo
             }, config);
 
             if (verifyRes.data.success) {
@@ -89,7 +111,7 @@ const Fleet = () => {
         prefill: {
           name: user.name,
           email: user.email,
-          contact: user.phone || "9999999999"
+          contact: bookingData.phoneNo || "9999999999"
         },
         theme: {
           color: "#D4AF37"
@@ -160,13 +182,58 @@ const Fleet = () => {
                    disabled={paymentLoadingId === car._id}
                    className="w-full border border-gray-600 hover:border-luxe-gold hover:text-black hover:bg-luxe-gold transition-colors duration-300 py-3 rounded uppercase text-sm font-bold tracking-widest shadow-md flex items-center justify-center"
                  >
-                   {paymentLoadingId === car._id ? 'Securing Portal...' : 'Book via Razorpay'}
+                   {paymentLoadingId === car._id ? 'Securing Portal...' : 'Book'}
                  </button>
                </div>
              </motion.div>
           ))}
         </div>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-gray-800 p-8 rounded-xl w-full max-w-lg shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+            <h3 className="text-2xl font-bold uppercase tracking-widest mb-6 text-white border-b border-gray-800 pb-3">Delivery & Verification</h3>
+            <form onSubmit={processPayment} className="space-y-4">
+              <div>
+                <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-1">Name (Auto-filled)</label>
+                <input type="text" className="w-full bg-gray-800 text-gray-500 border border-gray-700 rounded p-3 cursor-not-allowed" value={user?.name} disabled />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-1">Email (Auto-filled)</label>
+                <input type="email" className="w-full bg-gray-800 text-gray-500 border border-gray-700 rounded p-3 cursor-not-allowed" value={user?.email} disabled />
+              </div>
+              <div>
+                <label className="block text-luxe-gold text-xs tracking-widest uppercase font-semibold mb-1 flex justify-between">
+                  <span>Delivery Location (Map API)</span>
+                  <span className="text-[10px] text-gray-500">📍 Auto-Detect</span>
+                </label>
+                {/* 🗺️ Map Simulation Widget */}
+                <div className="relative mb-2 w-full h-32 bg-gray-800 rounded border border-gray-700 overflow-hidden group hover:border-luxe-gold transition-colors">
+                  <iframe width="100%" height="100%" style={{border:0, filter:'invert(90%) hue-rotate(180deg)'}} loading="lazy" allowFullScreen src="https://maps.google.com/maps?q=luxury%20hotels&t=m&z=12&output=embed&iwloc=near"></iframe>
+                  <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+                </div>
+                <input type="text" placeholder="Drop a pin or type specific address..." required className="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors" value={bookingData.deliveryLocation} onChange={(e) => setBookingData({...bookingData, deliveryLocation: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-1">License No.</label>
+                  <input type="text" placeholder="DL-1234567" required className="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors" value={bookingData.licenseNo} onChange={(e) => setBookingData({...bookingData, licenseNo: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-1">Phone No.</label>
+                  <input type="tel" placeholder="+91..." required className="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors" value={bookingData.phoneNo} onChange={(e) => setBookingData({...bookingData, phoneNo: e.target.value})} />
+                </div>
+              </div>
+              <div className="flex gap-4 pt-4 mt-4 border-t border-gray-800">
+                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 rounded uppercase text-sm font-bold border border-gray-600 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">Cancel</button>
+                <button type="submit" className="flex-1 bg-luxe-gold text-black font-bold py-3 rounded uppercase tracking-wider hover:bg-yellow-500 transition-colors shadow-[0_0_15px_rgba(212,175,55,0.4)]">Proceed to Payment</button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
     </div>
   );
 };

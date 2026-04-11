@@ -94,6 +94,20 @@ const MyBookings = () => {
                         <span>Order ID:</span>
                         <span className="truncate w-32 text-right opacity-70" title={booking.razorpayOrderId}>{booking.razorpayOrderId}</span>
                       </div>
+                      <div className="flex justify-between text-sm text-gray-300">
+                        <span>Booking ID:</span>
+                        <span className="truncate w-32 text-right opacity-70 text-luxe-gold" title={booking._id}>{booking._id}</span>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-gray-800 flex justify-between items-center text-sm font-bold">
+                        <span>Dealer Status:</span>
+                        <span className={`px-3 py-1 rounded tracking-widest uppercase ${
+                          booking.dealerStatus === 'accepted' ? 'text-green-400 bg-green-900/30 border border-green-500' :
+                          booking.dealerStatus === 'rejected' ? 'text-red-400 bg-red-900/30 border border-red-500' :
+                          'text-yellow-400 bg-yellow-900/30 border border-yellow-500'
+                        }`}>
+                          {booking.dealerStatus || 'Pending'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

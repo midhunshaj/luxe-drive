@@ -54,6 +54,19 @@ const AdminDashboard = () => {
     }
   }, [activeTab, user]);
 
+  const updateDealerStatus = async (bookingId, status) => {
+    try {
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      await axios.put(`/api/bookings/${bookingId}/status`, { dealerStatus: status }, config);
+      // Update local state instead of refetching everything
+      setBookings(bookings.map(b => b._id === bookingId ? { ...b, dealerStatus: status } : b));
+      alert(`Booking ${status} successfully!`);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update status");
+    }
+  };
+
   const onChange = (e) => {
     setFormData((prevState) => ({ ...prevState, [e.target.name]: e.target.value }));
   };
@@ -159,9 +172,9 @@ const AdminDashboard = () => {
                     <th className="py-4 px-4">User</th>
                     <th className="py-4 px-4">Vehicle</th>
                     <th className="py-4 px-4">Dates</th>
-                    <th className="py-4 px-4">Cost (INR)</th>
+                    <th className="py-4 px-4">Location/Phone</th>
                     <th className="py-4 px-4">Payment</th>
-                    <th className="py-4 px-4">Order ID</th>
+                    <th className="py-4 px-4">Action</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
@@ -173,20 +186,33 @@ const AdminDashboard = () => {
                       </td>
                       <td className="py-4 px-4">
                         <div className="text-luxe-gold font-bold">{b.car?.make} {b.car?.model}</div>
+                        <div className="text-[10px] text-gray-500">{b._id}</div>
                       </td>
-                      <td className="py-4 px-4 text-gray-400">
+                      <td className="py-4 px-4 text-gray-400 text-xs">
                         {new Date(b.startDate).toLocaleDateString()}
                       </td>
-                      <td className="py-4 px-4 font-bold">
-                        ₹{b.totalCost.toLocaleString('en-IN')}
+                      <td className="py-4 px-4 text-xs">
+                        <div>📍 {b.deliveryLocation || '<none>'}</div>
+                        <div className="text-gray-500 pt-1">📞 {b.phoneNo || '<none>'}</div>
+                        <div className="text-gray-500">💳 {b.licenseNo || '<none>'}</div>
                       </td>
                       <td className="py-4 px-4">
-                        <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${b.paymentStatus === 'paid' ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
+                        <div className={`px-2 py-1 rounded text-center text-xs font-bold uppercase mb-1 ${b.paymentStatus === 'paid' ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
                           {b.paymentStatus}
-                        </span>
+                        </div>
+                        <div className="text-xs text-center font-mono">₹{b.totalCost?.toLocaleString('en-IN')}</div>
                       </td>
-                      <td className="py-4 px-4 text-xs font-mono text-gray-500 truncate max-w-[120px]" title={b.razorpayOrderId}>
-                        {b.razorpayOrderId}
+                      <td className="py-4 px-4">
+                        {b.dealerStatus === 'pending' || !b.dealerStatus ? (
+                          <div className="flex gap-2">
+                            <button onClick={() => updateDealerStatus(b._id, 'accepted')} className="px-3 py-1 bg-green-900 hover:bg-green-800 text-green-100 rounded text-xs font-bold uppercase transition">Accept</button>
+                            <button onClick={() => updateDealerStatus(b._id, 'rejected')} className="px-3 py-1 bg-red-900 hover:bg-red-800 text-red-100 rounded text-xs font-bold uppercase transition">Reject</button>
+                          </div>
+                        ) : (
+                          <span className={`px-3 py-1 block text-center rounded text-xs font-bold uppercase ${b.dealerStatus === 'accepted' ? 'text-green-400 bg-green-900/30 border border-green-500' : 'text-red-400 bg-red-900/30 border border-red-500'}`}>
+                            {b.dealerStatus}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}

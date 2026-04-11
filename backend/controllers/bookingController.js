@@ -57,6 +57,9 @@ const verifyPayment = async (req, res) => {
       carId,
       pricePerDay,
       rentalDays = 1,
+      deliveryLocation,
+      licenseNo,
+      phoneNo
     } = req.body;
 
     const sign = razorpay_order_id + "|" + razorpay_payment_id;
@@ -82,7 +85,11 @@ const verifyPayment = async (req, res) => {
       paymentStatus: 'paid',
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
-      status: 'active'
+      status: 'active',
+      deliveryLocation,
+      licenseNo,
+      phoneNo,
+      dealerStatus: 'pending'
     });
 
     console.log("✅ Booking confirmed and saved:", booking._id);
@@ -114,4 +121,22 @@ const getAllBookings = async (req, res) => {
   }
 };
 
-module.exports = { createCheckoutSession, verifyPayment, getMyBookings, getAllBookings };
+// @desc    Update booking status (Admin only)
+const updateBookingStatus = async (req, res) => {
+  try {
+    const { dealerStatus } = req.body;
+    const booking = await Booking.findById(req.params.id);
+
+    if (booking) {
+      booking.dealerStatus = dealerStatus;
+      const updatedBooking = await booking.save();
+      res.json(updatedBooking);
+    } else {
+      res.status(404).json({ message: 'Booking not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createCheckoutSession, verifyPayment, getMyBookings, getAllBookings, updateBookingStatus };
