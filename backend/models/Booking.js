@@ -9,7 +9,9 @@ const bookingSchema = new mongoose.Schema({
   paymentStatus: { type: String, enum: ['pending', 'paid', 'refunded'], default: 'pending' },
   razorpayOrderId: { type: String },
   razorpayPaymentId: { type: String },
-  status: { type: String, enum: ['active', 'completed', 'cancelled'], default: 'active' }
+  status: { type: String, enum: ['active', 'completed', 'cancelled'], default: 'active' },
+  promoCode: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' },
+  discountAmount: { type: Number, default: 0 }
 }, {
   timestamps: true
 });

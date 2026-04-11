@@ -78,4 +78,67 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, authUser, getUserProfile };
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      user.name = req.body.name || user.name;
+      user.email = req.body.email || user.email;
+      user.phone = req.body.phone || user.phone;
+      user.address = req.body.address || user.address;
+      user.driverLicenseUrl = req.body.driverLicenseUrl || user.driverLicenseUrl;
+
+      if (req.body.password) {
+        user.password = req.body.password;
+      }
+
+      const updatedUser = await user.save();
+
+      res.json({
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+        driverLicenseUrl: updatedUser.driverLicenseUrl,
+        wishlist: updatedUser.wishlist,
+        token: generateToken(updatedUser._id),
+      });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Toggle Car in Wishlist
+// @route   POST /api/users/wishlist
+// @access  Private
+const toggleWishlist = async (req, res) => {
+  try {
+    const { carId } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      const index = user.wishlist.indexOf(carId);
+      if (index === -1) {
+        user.wishlist.push(carId); // Add to wishlist
+      } else {
+        user.wishlist.splice(index, 1); // Remove from wishlist
+      }
+      await user.save();
+      res.json(user.wishlist);
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist };

@@ -35,6 +35,9 @@ const Navbar = () => {
                       ♦ Admin Panel
                     </Link>
                   )}
+                  <Link to="/profile" className="text-sm uppercase tracking-wider text-gray-300 hover:text-luxe-gold transition-colors duration-300">
+                    Profile
+                  </Link>
                   <Link to="/my-bookings" className="text-sm uppercase tracking-wider text-gray-300 hover:text-luxe-gold transition-colors duration-300">
                     My Bookings
                   </Link>

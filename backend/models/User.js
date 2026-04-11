@@ -6,7 +6,11 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  isVerified: { type: Boolean, default: false }
+  isVerified: { type: Boolean, default: false },
+  phone: { type: String },
+  address: { type: String },
+  driverLicenseUrl: { type: String },
+  wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Car' }]
 }, {
   timestamps: true // Automatically creates createdAt and updatedAt fields
 });

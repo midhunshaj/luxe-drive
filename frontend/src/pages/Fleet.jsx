@@ -60,7 +60,7 @@ const Fleet = () => {
       }
 
       const options = {
-        key: 'rzp_live_SX2YsVi2Jbh7Dh', // Your exact live key
+        key: 'rzp_live_SX7dA0kgUoreAg', // Matches backend RAZORPAY_KEY_ID
         amount: order.amount,
         currency: order.currency,
         name: "LuxeDrive Premium",
@@ -89,6 +89,7 @@ const Fleet = () => {
         prefill: {
           name: user.name,
           email: user.email,
+          contact: user.phone || "9999999999"
         },
         theme: {
           color: "#D4AF37"

@@ -13,7 +13,14 @@ const carSchema = new mongoose.Schema({
     coordinates: { type: [Number], required: true } // format: [longitude, latitude]
   },
   images: [{ type: String }],
-  features: [{ type: String }]
+  features: [{ type: String }],
+  reviews: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    rating: { type: Number, required: true },
+    comment: { type: String }
+  }],
+  averageRating: { type: Number, default: 0 },
+  numReviews: { type: Number, default: 0 }
 }, {
   timestamps: true
 });
