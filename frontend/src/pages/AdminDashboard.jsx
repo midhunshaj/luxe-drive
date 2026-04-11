@@ -91,7 +91,8 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error(error);
       setUploadingImage(false);
-      alert("Image upload failed. Ensure /api/upload is accessible.");
+      const backendError = error.response?.data?.message || error.message || "Unknown Express server error";
+      alert(`Image upload failed: ${backendError}`);
     }
   };
 
