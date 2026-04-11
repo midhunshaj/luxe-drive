@@ -37,7 +37,6 @@ app.use('/api/cars', require('./routes/carRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 
-const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
 // Configure the live Production/Dev Port
