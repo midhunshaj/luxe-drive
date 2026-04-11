@@ -236,6 +236,26 @@ const Fleet = () => {
                <h2 className="text-3xl font-bold mb-8 uppercase tracking-tighter">Identity & Delivery <span className="text-luxe-gold">Verification</span></h2>
                <form onSubmit={processPayment} className="space-y-6">
                   <div>
+                    <label className="block text-gray-400 text-[10px] uppercase tracking-widest mb-2 font-bold flex justify-between">
+                       Dealership Dispatch Location
+                       <a 
+                         href={`https://www.google.com/maps?q=${selectedCar.location.coordinates[1]},${selectedCar.location.coordinates[0]}`} 
+                         target="_blank" 
+                         rel="noreferrer" 
+                         className="text-luxe-gold hover:underline"
+                       >
+                         📍 View on GMap
+                       </a>
+                    </label>
+                    <div className="rounded-xl overflow-hidden border border-gray-800 h-28 w-full mb-4">
+                      <iframe 
+                        width="100%" 
+                        height="100%" 
+                        style={{ border: 0 }} 
+                        loading="lazy" 
+                        src={`https://maps.google.com/maps?q=${selectedCar.location.coordinates[1]},${selectedCar.location.coordinates[0]}&z=14&output=embed`}
+                      ></iframe>
+                    </div>
                     <label className="block text-gray-500 text-xs uppercase tracking-widest mb-2 font-bold">Delivery Location (City/Address)</label>
                     <input type="text" value={bookingData.deliveryLocation} onChange={(e) => setBookingData({...bookingData, deliveryLocation: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:border-luxe-gold outline-none transition" placeholder="Where should we drop the vehicle?" required />
                   </div>
