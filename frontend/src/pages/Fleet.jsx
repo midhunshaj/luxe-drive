@@ -19,8 +19,8 @@ const Fleet = () => {
     deliveryLocation: '', licenseNo: '', phoneNo: ''
   });
 
-  // Real-time Locking State
-  const [lockedCars, setLockedCars] = useState({}); // { carId: userId }
+  // Real-time Locking State (Maps carId to array of user-locks)
+  const [lockedCars, setLockedCars] = useState({}); 
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
@@ -31,15 +31,11 @@ const Fleet = () => {
     setSocket(newSocket);
 
     newSocket.on('initialLocks', (locks) => setLockedCars(locks));
-    newSocket.on('carLocked', ({ carId, userId }) => {
-      setLockedCars(prev => ({ ...prev, [carId]: userId }));
+    newSocket.on('carLocked', ({ carId, userIds }) => {
+      setLockedCars(prev => ({ ...prev, [carId]: userIds }));
     });
-    newSocket.on('carUnlocked', (carId) => {
-      setLockedCars(prev => {
-        const newLocks = { ...prev };
-        delete newLocks[carId];
-        return newLocks;
-      });
+    newSocket.on('carUnlocked', ({ carId, userIds }) => {
+      setLockedCars(prev => ({ ...prev, [carId]: userIds }));
     });
 
     return () => newSocket.disconnect();
@@ -52,9 +48,10 @@ const Fleet = () => {
       return;
     }
     
-    // Check if someone else already has the modal open
-    if (lockedCars[car._id] && lockedCars[car._id] !== user._id) {
-      alert("This vehicle is currently being reserved by another client. Please wait 60 seconds.");
+    // Check if the car is FULLY occupied by other users
+    const currentOccupancy = (lockedCars[car._id] || []).filter(id => id !== user._id).length;
+    if (currentOccupancy >= car.countInStock) {
+      alert("All available units of this vehicle are currently being reserved by other clients. Please wait 60 seconds.");
       return;
     }
 
@@ -62,14 +59,14 @@ const Fleet = () => {
     setBookingData({ deliveryLocation: '', licenseNo: '', phoneNo: user.phone || '' });
     setShowModal(true);
     
-    // BROADCAST: This car is now busy
+    // BROADCAST: This user is taking one unit spot
     socket.emit('lockCar', { carId: car._id, userId: user._id });
   };
 
   const closeModal = () => {
     setShowModal(false);
-    if (selectedCar && socket) {
-      socket.emit('unlockCar', selectedCar._id);
+    if (selectedCar && socket && user) {
+      socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
     }
   };
 
@@ -87,7 +84,7 @@ const Fleet = () => {
       if (typeof window === 'undefined' || !window.Razorpay) {
         alert("Payment Gateway Error. Please refresh.");
         setPaymentLoadingId(null);
-        socket.emit('unlockCar', selectedCar._id);
+        socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
         return;
       }
 
@@ -120,18 +117,18 @@ const Fleet = () => {
 
             if (verifyRes.data.success) {
                alert(`Payment Verified! Transaction ID: ${response.razorpay_payment_id}`);
-               socket.emit('unlockCar', selectedCar._id); // Release lock on success
+               socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
                navigate('/my-bookings'); 
             }
           } catch (err) {
             console.error(err);
             alert("Verification Failed.");
-            socket.emit('unlockCar', selectedCar._id);
+            socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
           }
         },
         modal: {
           ondismiss: function() {
-            socket.emit('unlockCar', selectedCar._id);
+            socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
             setPaymentLoadingId(null);
           }
         },
@@ -147,7 +144,7 @@ const Fleet = () => {
       console.error(error);
       alert('Order Setup Failed.');
       setPaymentLoadingId(null);
-      socket.emit('unlockCar', selectedCar._id);
+      socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
     }
   };
 
@@ -166,7 +163,9 @@ const Fleet = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {cars.map((car, index) => {
-              const isLocked = lockedCars[car._id] && lockedCars[car._id] !== user?._id;
+              // A car is ONLY considered "Locked" if all physical units are being occupied
+              const activeUserLocks = (lockedCars[car._id] || []).filter(id => id !== user?._id);
+              const isLocked = activeUserLocks.length >= car.countInStock;
               
               return (
                 <motion.div
@@ -184,7 +183,7 @@ const Fleet = () => {
                     {isLocked && (
                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
                           <span className="bg-red-600 text-white px-4 py-2 rounded font-bold uppercase tracking-tighter animate-pulse">
-                             ⚠️ Out of Order (Being Reserved)
+                             ⚠️ All Units Being Reserved
                           </span>
                        </div>
                     )}
@@ -198,6 +197,9 @@ const Fleet = () => {
                         <p className={`mt-2 text-xs font-bold uppercase tracking-widest ${car.countInStock > 0 ? 'text-green-500' : 'text-red-500'}`}>
                           Availability: {car.countInStock || 0} Units Remain
                         </p>
+                        {car.countInStock > 0 && activeUserLocks.length > 0 && (
+                          <p className="text-[10px] text-yellow-500 mt-1 animate-pulse">⚠️ {activeUserLocks.length} user(s) currently checking out</p>
+                        )}
                       </div>
                       <div className="text-right">
                         <p className="text-luxe-gold text-2xl font-black">₹{car.pricePerDay.toLocaleString()}</p>

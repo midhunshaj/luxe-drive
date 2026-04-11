@@ -47,7 +47,7 @@ app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- IN-MEMORY LOCK SYSTEM ---
-// Tracks which cars are currently being "checked out" by users
+// Tracks arrays of userIds currently "checking out" each carId
 const activeLocks = {}; 
 
 // Socket.io Real-time Logic
@@ -57,27 +57,28 @@ io.on('connection', (socket) => {
   socket.on('join', (userId) => {
     socket.join(userId);
     console.log(`👤 User joined private room: ${userId}`);
-    // Send currently locked cars to the new user immediately
     socket.emit('initialLocks', activeLocks);
   });
 
-  // When a user opens the booking modal
   socket.on('lockCar', ({ carId, userId }) => {
-    activeLocks[carId] = userId;
-    io.emit('carLocked', { carId, userId });
-    console.log(`🔒 Car LOCKED: ${carId} by user ${userId}`);
+    if (!activeLocks[carId]) activeLocks[carId] = [];
+    if (!activeLocks[carId].includes(userId)) {
+      activeLocks[carId].push(userId);
+    }
+    io.emit('carLocked', { carId, userIds: activeLocks[carId] });
+    console.log(`🔒 Car LOCKED: ${carId} (Active users: ${activeLocks[carId].length})`);
   });
 
-  // When a user closes the modal OR completes payment
-  socket.on('unlockCar', (carId) => {
-    delete activeLocks[carId];
-    io.emit('carUnlocked', carId);
+  socket.on('unlockCar', ({ carId, userId }) => {
+    if (activeLocks[carId]) {
+      activeLocks[carId] = activeLocks[carId].filter(id => id !== userId);
+      if (activeLocks[carId].length === 0) delete activeLocks[carId];
+    }
+    io.emit('carUnlocked', { carId, userIds: activeLocks[carId] || [] });
     console.log(`🔓 Car UNLOCKED: ${carId}`);
   });
 
   socket.on('disconnect', () => {
-    // Cleanup any locks held by this socket (if we tracked them)
-    // For simplicity, we just log it. In production, you'd map socketId to carId.
     console.log('📡 User disconnected');
   });
 });
