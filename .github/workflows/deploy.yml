@@ -29,8 +29,10 @@ jobs:
             echo "🚀 Starting LuxeDrive Deployment..."
             cd /website/luxe-drive
 
-            echo "📥 Pulling latest code from GitHub..."
-            git pull origin main
+            echo "📥 Force Syncing latest code from GitHub..."
+            git fetch --all
+            git reset --hard origin/main
+
 
             echo "📦 Installing backend dependencies..."
             cd backend
