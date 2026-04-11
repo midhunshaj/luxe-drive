@@ -41,6 +41,25 @@ const Fleet = () => {
     return () => newSocket.disconnect();
   }, [dispatch]);
 
+  const detectMyLocation = () => {
+    if (navigator.geolocation) {
+      setBookingData(prev => ({ ...prev, deliveryLocation: "📡 Synchronizing GPS..." }));
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          // Format as readable coordinates for the user
+          setBookingData(prev => ({ ...prev, deliveryLocation: `${latitude.toFixed(4)}, ${longitude.toFixed(4)} (My Current Location)` }));
+        },
+        () => {
+          alert("GPS Permission Denied. Please type your address manually.");
+          setBookingData(prev => ({ ...prev, deliveryLocation: "" }));
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  };
+
   const handleBookingClick = (car) => {
     if (!user) {
       alert("Please Sign In first to reserve an ultra-luxury vehicle.");
@@ -231,45 +250,53 @@ const Fleet = () => {
         {showModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeModal} className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-xl bg-[#0d0d0d] border border-gray-800 rounded-3xl p-8 overflow-hidden">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-2xl bg-[#0d0d0d] border border-gray-800 rounded-3xl p-8 overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar">
                <div className="absolute top-0 left-0 w-full h-1 bg-luxe-gold/50" />
-               <h2 className="text-3xl font-bold mb-8 uppercase tracking-tighter">Identity & Delivery <span className="text-luxe-gold">Verification</span></h2>
-               <form onSubmit={processPayment} className="space-y-6">
+               <h2 className="text-3xl font-bold mb-8 uppercase tracking-tighter">Reservation <span className="text-luxe-gold">& Delivery</span></h2>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                   <div>
                     <label className="block text-gray-400 text-[10px] uppercase tracking-widest mb-2 font-bold flex justify-between">
-                       Dealership Dispatch Location
-                       <a 
-                         href={`https://www.google.com/maps?q=${selectedCar.location.coordinates[1]},${selectedCar.location.coordinates[0]}`} 
-                         target="_blank" 
-                         rel="noreferrer" 
-                         className="text-luxe-gold hover:underline"
-                       >
-                         📍 View on GMap
-                       </a>
+                       Dealership Origin
+                       <a href={`https://www.google.com/maps?q=${selectedCar.location.coordinates[1]},${selectedCar.location.coordinates[0]}`} target="_blank" rel="noreferrer" className="text-luxe-gold hover:underline">📍 View on GMap</a>
                     </label>
-                    <div className="rounded-xl overflow-hidden border border-gray-800 h-28 w-full mb-4">
-                      <iframe 
-                        width="100%" 
-                        height="100%" 
-                        style={{ border: 0 }} 
-                        loading="lazy" 
-                        src={`https://maps.google.com/maps?q=${selectedCar.location.coordinates[1]},${selectedCar.location.coordinates[0]}&z=14&output=embed`}
-                      ></iframe>
+                    <div className="rounded-xl overflow-hidden border border-gray-800 h-32 w-full">
+                      <iframe width="100%" height="100%" style={{ border: 0 }} loading="lazy" src={`https://maps.google.com/maps?q=${selectedCar.location.coordinates[1]},${selectedCar.location.coordinates[0]}&z=13&output=embed`}></iframe>
                     </div>
-                    <label className="block text-gray-500 text-xs uppercase tracking-widest mb-2 font-bold">Delivery Location (City/Address)</label>
-                    <input type="text" value={bookingData.deliveryLocation} onChange={(e) => setBookingData({...bookingData, deliveryLocation: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:border-luxe-gold outline-none transition" placeholder="Where should we drop the vehicle?" required />
                   </div>
                   <div>
-                    <label className="block text-gray-500 text-xs uppercase tracking-widest mb-2 font-bold">Driving License Number</label>
-                    <input type="text" value={bookingData.licenseNo} onChange={(e) => setBookingData({...bookingData, licenseNo: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:border-luxe-gold outline-none transition uppercase" placeholder="Input DL Number for Verification" required />
+                    <label className="block text-gray-400 text-[10px] uppercase tracking-widest mb-2 font-bold">Delivery Preview</label>
+                    <div className="rounded-xl overflow-hidden border border-gray-800 h-32 w-full bg-gray-900 border-dashed flex items-center justify-center">
+                       {bookingData.deliveryLocation ? (
+                         <iframe width="100%" height="100%" style={{ border: 0 }} loading="lazy" src={`https://maps.google.com/maps?q=${bookingData.deliveryLocation}&z=14&output=embed`}></iframe>
+                       ) : (
+                         <p className="text-gray-600 text-[10px] uppercase font-bold px-4 text-center">Enter location to visualize delivery route</p>
+                       )}
+                    </div>
                   </div>
+               </div>
+
+               <form onSubmit={processPayment} className="space-y-6">
                   <div>
-                    <label className="block text-gray-500 text-xs uppercase tracking-widest mb-2 font-bold">Contact Phone Number</label>
-                    <input type="tel" value={bookingData.phoneNo} onChange={(e) => setBookingData({...bookingData, phoneNo: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:border-luxe-gold outline-none transition" placeholder="+91 XXXX XXX XXX" required />
+                    <div className="flex justify-between items-center mb-2">
+                       <label className="block text-gray-500 text-xs uppercase tracking-widest font-bold">Delivery Address</label>
+                       <button type="button" onClick={detectMyLocation} className="text-[10px] text-luxe-gold bg-luxe-gold/10 px-2 py-1 rounded border border-luxe-gold/30 hover:bg-luxe-gold hover:text-black transition uppercase font-bold tracking-tighter">📡 Detect My Location</button>
+                    </div>
+                    <input type="text" value={bookingData.deliveryLocation} onChange={(e) => setBookingData({...bookingData, deliveryLocation: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:border-luxe-gold outline-none transition" placeholder="Street, Hotel Name, or Landmarks" required />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-gray-500 text-xs uppercase tracking-widest mb-2 font-bold">Driving License No.</label>
+                      <input type="text" value={bookingData.licenseNo} onChange={(e) => setBookingData({...bookingData, licenseNo: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:border-luxe-gold outline-none transition uppercase" placeholder="Input DL Reference" required />
+                    </div>
+                    <div>
+                      <label className="block text-gray-500 text-xs uppercase tracking-widest mb-2 font-bold">Phone No.</label>
+                      <input type="tel" value={bookingData.phoneNo} onChange={(e) => setBookingData({...bookingData, phoneNo: e.target.value})} className="w-full bg-gray-900 border border-gray-800 rounded-xl p-4 text-white focus:border-luxe-gold outline-none transition" placeholder="+91 XXXX XXX XXX" required />
+                    </div>
                   </div>
                   <div className="pt-4 grid grid-cols-2 gap-4">
-                    <button type="button" onClick={closeModal} className="w-full py-4 text-gray-500 font-bold uppercase tracking-widest hover:text-white transition">Cancel</button>
-                    <button type="submit" className="w-full bg-luxe-gold text-black font-bold py-4 rounded-xl uppercase tracking-widest shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:scale-105 transition-all">Proceed to Payment</button>
+                    <button type="button" onClick={closeModal} className="w-full py-4 text-gray-500 font-bold uppercase tracking-widest hover:text-white transition">Back</button>
+                    <button type="submit" className="w-full bg-luxe-gold text-black font-bold py-4 rounded-xl uppercase tracking-widest shadow-[0_0_30px_rgba(212,175,55,0.3)] hover:scale-105 transition-all text-sm">Review & Pay</button>
                   </div>
                </form>
             </motion.div>
