@@ -4,8 +4,9 @@ const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
 
-// Load environment variables dynamically
-dotenv.config();
+// Load environment variables dynamically perfectly bypassing PM2's current-working-directory bug
+const path = require('path');
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Connect to MongoDB
 connectDB();
