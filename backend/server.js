@@ -1,26 +1,33 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const morgan = require('morgan');
+const path = require('path');
 const connectDB = require('./config/db');
 
 // Load environment variables dynamically perfectly bypassing PM2's current-working-directory bug
-const path = require('path');
 dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Connect to MongoDB
 connectDB();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Adjust this to your domain in production for extra security
+    methods: ["GET", "POST"]
+  }
+});
+
+// Attach io to app to access it in controllers
+app.set('io', io);
 
 // --- SECURE MIDDLEWARES ---
-// NO HELMET! We forcefully removed Helmet to destroy the CSP Firewall that was blocking Razorpay downloads on the Linux Server!
 app.use(cors());
-
-// Body parser to accept massive JSON data payloads in the request body
 app.use(express.json());
-
-// Console Logger (Forces Linux to print every single API hit so we can see NGINX network data)
 app.use(morgan('dev'));
 
 // Setup Route Folders
@@ -37,12 +44,26 @@ app.use('/api/cars', require('./routes/carRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 
-app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Socket.io Real-time Logic
+io.on('connection', (socket) => {
+  console.log('📡 Logic Engine: New User Socket Connection established:', socket.id);
+
+  socket.on('join', (userId) => {
+    socket.join(userId);
+    console.log(`👤 User joined private room: ${userId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('📡 User disconnected');
+  });
+});
 
 // Configure the live Production/Dev Port
 const PORT = process.env.PORT || 5000;
 
 // Activate Server
-app.listen(PORT, () => {
-  console.log(`🚀 LuxeDrive Server natively running in [${process.env.NODE_ENV}] mode on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`🚀 LuxeDrive Server natively running with Socket.io in [${process.env.NODE_ENV}] mode on port ${PORT}`);
 });

@@ -164,6 +164,15 @@ const updateBookingStatus = async (req, res) => {
         }
       }
 
+      // Real-time Push Notification via Socket.io
+      const io = req.app.get('io');
+      if (io) {
+        io.to(booking.user._id.toString()).emit('statusUpdate', {
+          bookingId: booking._id,
+          dealerStatus: dealerStatus
+        });
+      }
+
       res.json(updatedBooking);
     } else {
       res.status(404).json({ message: 'Booking not found' });

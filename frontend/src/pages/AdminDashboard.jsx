@@ -11,6 +11,7 @@ const AdminDashboard = () => {
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editCarId, setEditCarId] = useState(null);
+  const [successMsg, setSuccessMsg] = useState('');
 
   const [formData, setFormData] = useState({
     make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139'
@@ -57,9 +58,9 @@ const AdminDashboard = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
       await axios.put(`/api/bookings/${bookingId}/status`, { dealerStatus: status }, config);
-      // Update local state instead of refetching everything
       setBookings(bookings.map(b => b._id === bookingId ? { ...b, dealerStatus: status } : b));
-      alert(`Booking ${status} successfully!`);
+      setSuccessMsg(`Booking ${status} successfully! ✅`);
+      setTimeout(() => setSuccessMsg(''), 4000);
     } catch (error) {
       console.error(error);
       const backendError = error.response?.data?.message || error.message || "Unknown error";
@@ -126,7 +127,8 @@ const AdminDashboard = () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
         await axios.put(`/api/cars/${editCarId}`, carPack, config);
-        alert("Vehicle updated successfully!");
+        setSuccessMsg("Vehicle updated successfully! ✅");
+        setTimeout(() => setSuccessMsg(''), 4000);
         setEditCarId(null);
         setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
         dispatch(getCars());
@@ -138,7 +140,8 @@ const AdminDashboard = () => {
       dispatch(createCar(carPack))
         .unwrap()
         .then(() => {
-          alert("Vehicle Successfully Deployed to Global Fleet Database! ✅");
+          setSuccessMsg("Vehicle Successfully Deployed to Global Fleet! ✅");
+          setTimeout(() => setSuccessMsg(''), 4000);
           setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
         })
         .catch((err) => {
@@ -247,6 +250,11 @@ const AdminDashboard = () => {
               </div>
 
               <div className="md:col-span-2 mt-6">
+                 {successMsg && (
+                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-green-900/50 border border-green-500 text-green-400 p-4 rounded mb-6 text-center font-bold tracking-widest uppercase">
+                     {successMsg}
+                   </motion.div>
+                 )}
                  <button type="submit" disabled={isLoading || uploadingImage} className="w-full bg-luxe-gold text-black font-bold py-4 rounded uppercase tracking-wider hover:bg-yellow-500 shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-50 transition-all">
                    {isLoading ? 'Encrypting & Injecting into MongoDB...' : editCarId ? 'Update Vehicle Details' : 'Upload Vehicle to Global Fleet'}
                  </button>

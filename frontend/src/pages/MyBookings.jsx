@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import io from 'socket.io-client';
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -29,6 +30,24 @@ const MyBookings = () => {
     };
 
     fetchBookings();
+
+    // --- Real-time Socket Listener ---
+    const socket = io(window.location.origin.replace('5173', '5000')); // Connect to backend port
+    
+    socket.emit('join', user._id);
+
+    socket.on('statusUpdate', (data) => {
+      console.log('⚡ Real-time Update Received:', data);
+      setBookings((prevBookings) =>
+        prevBookings.map((b) =>
+          b._id === data.bookingId ? { ...b, dealerStatus: data.dealerStatus } : b
+        )
+      );
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [user, navigate]);
 
   return (
