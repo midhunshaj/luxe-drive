@@ -213,10 +213,36 @@ const AdminDashboard = () => {
               </div>
               
               <div className="md:col-span-2 pt-4 border-t border-gray-800">
-                 <label className="block text-gray-400 text-xs tracking-widest uppercase mb-4 text-center">Precise Geo-Spatial Coordinates (Map feature)</label>
-                 <div className="flex gap-4">
-                   <input type="text" name="longitude" value={longitude} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-center focus:border-luxe-gold" placeholder="Longitude" required />
-                   <input type="text" name="latitude" value={latitude} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-center focus:border-luxe-gold" placeholder="Latitude" required />
+                 <div className="flex justify-between items-center mb-4">
+                   <label className="block text-gray-400 text-xs tracking-widest uppercase">Precise Dealership Geo-Location</label>
+                   <button type="button" onClick={() => {
+                     if (navigator.geolocation) {
+                       navigator.geolocation.getCurrentPosition(
+                         (pos) => setFormData(prev => ({ ...prev, latitude: pos.coords.latitude, longitude: pos.coords.longitude })),
+                         () => alert("GPS Permission denied by browser.")
+                       );
+                     }
+                   }} className="text-xs bg-gray-800 text-luxe-gold px-3 py-1 rounded border border-luxe-gold/30 hover:bg-luxe-gold hover:text-black transition">
+                     📡 Auto-Detect My Location
+                   </button>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="space-y-4">
+                     <input type="text" name="latitude" value={latitude} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-center focus:border-luxe-gold text-white" placeholder="Latitude (e.g. 28.6139)" required />
+                     <input type="text" name="longitude" value={longitude} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-center focus:border-luxe-gold text-white" placeholder="Longitude (e.g. 77.2090)" required />
+                   </div>
+                   
+                   <div className="rounded overflow-hidden border border-gray-700 h-32 w-full">
+                     {/* 100% Free Google Maps Embed Visualizer */}
+                     <iframe 
+                       width="100%" 
+                       height="100%" 
+                       style={{ border: 0 }} 
+                       loading="lazy" 
+                       src={`https://maps.google.com/maps?q=${latitude || 0},${longitude || 0}&z=15&output=embed`}
+                     ></iframe>
+                   </div>
                  </div>
               </div>
 
