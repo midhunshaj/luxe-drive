@@ -213,7 +213,8 @@ const Fleet = () => {
                     <div className="flex justify-between items-end mb-6">
                       <div>
                         <h3 className="text-2xl font-bold tracking-tight mb-1">{car.make} <span className="text-luxe-gold">{car.model}</span></h3>
-                        <p className="text-gray-500 text-sm font-medium">{car.year} Production Model</p>
+                        <p className="text-gray-400 text-xs uppercase tracking-widest font-bold mb-1">Provider: <span className="text-white">{car.dealerName || 'LuxeDrive Premium'}</span></p>
+                        <p className="text-gray-500 text-[10px] font-medium">{car.year} Production Model</p>
                         <p className={`mt-2 text-xs font-bold uppercase tracking-widest ${car.countInStock > 0 ? 'text-green-500' : 'text-red-500'}`}>
                           Availability: {car.countInStock || 0} Units Remain
                         </p>

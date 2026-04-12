@@ -14,10 +14,10 @@ const AdminDashboard = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   const [formData, setFormData] = useState({
-    make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, imageUrl: '', longitude: '77.2090', latitude: '28.6139'
+    make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, dealerName: 'LuxeDrive Premium', imageUrl: '', longitude: '77.2090', latitude: '28.6139'
   });
 
-  const { make, model, year, category, pricePerDay, countInStock, imageUrl, longitude, latitude } = formData;
+  const { make, model, year, category, pricePerDay, countInStock, dealerName, imageUrl, longitude, latitude } = formData;
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -108,7 +108,7 @@ const AdminDashboard = () => {
     setEditCarId(car._id);
     setFormData({
       make: car.make, model: car.model, year: car.year, category: car.category, pricePerDay: car.pricePerDay, 
-      countInStock: car.countInStock || 1,
+      countInStock: car.countInStock || 1, dealerName: car.dealerName || 'LuxeDrive Premium',
       imageUrl: car.images[0] || '', longitude: car.location?.coordinates[0] || '77.2090', latitude: car.location?.coordinates[1] || '28.6139'
     });
     setActiveTab('deploy');
@@ -120,7 +120,7 @@ const AdminDashboard = () => {
 
     const carPack = {
       make, model, year: Number(year), category, pricePerDay: Number(pricePerDay),
-      countInStock: Number(countInStock),
+      countInStock: Number(countInStock), dealerName,
       images: [imageUrl],
       location: { type: 'Point', coordinates: [Number(longitude), Number(latitude)] }
     };
@@ -132,7 +132,7 @@ const AdminDashboard = () => {
         setSuccessMsg("Vehicle updated successfully! ✅");
         setTimeout(() => setSuccessMsg(''), 4000);
         setEditCarId(null);
-        setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
+        setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, dealerName: 'LuxeDrive Premium', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
         dispatch(getCars());
         setActiveTab('fleet');
       } catch(err) {
@@ -144,7 +144,7 @@ const AdminDashboard = () => {
         .then(() => {
           setSuccessMsg("Vehicle Successfully Deployed to Global Fleet! ✅");
           setTimeout(() => setSuccessMsg(''), 4000);
-          setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
+          setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, dealerName: 'LuxeDrive Premium', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
         })
         .catch((err) => {
           alert(`Upload Failed: ${err}`);
@@ -158,7 +158,7 @@ const AdminDashboard = () => {
         
         <div className="flex justify-center space-x-4 mb-8">
           <button 
-            onClick={() => { setActiveTab('deploy'); setEditCarId(null); setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139' }); }}
+            onClick={() => { setActiveTab('deploy'); setEditCarId(null); setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, dealerName: 'LuxeDrive Premium', imageUrl: '', longitude: '77.2090', latitude: '28.6139' }); }}
             className={`px-8 py-3 rounded text-sm tracking-widest uppercase font-bold transition-all ${activeTab === 'deploy' ? 'bg-luxe-gold text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
           >
             {editCarId ? 'Update Vehicle' : 'Deploy Vehicle'}
@@ -214,6 +214,10 @@ const AdminDashboard = () => {
               <div>
                  <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">Inventory Quantity (Available)</label>
                  <input type="number" name="countInStock" value={countInStock} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold text-white" placeholder="1" required />
+              </div>
+              <div>
+                 <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">Rental Provider / Company Name</label>
+                 <input type="text" name="dealerName" value={dealerName} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold text-white" placeholder="e.g. Sixt, Zoomcar, LuxeDrive" required />
               </div>
               <div>
                  <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">High-Res Gallery Image {uploadingImage && <span className="text-luxe-gold">(Uploading...)</span>}</label>
@@ -277,6 +281,7 @@ const AdminDashboard = () => {
                 <tr className="border-b border-gray-800 text-gray-400 text-xs uppercase tracking-widest">
                   <th className="py-4 px-4">Img</th>
                   <th className="py-4 px-4">Make / Model</th>
+                  <th className="py-4 px-4">Provider</th>
                   <th className="py-4 px-4">Segment</th>
                   <th className="py-4 px-4">Stock</th>
                   <th className="py-4 px-4">Rate (INR)</th>
@@ -288,6 +293,7 @@ const AdminDashboard = () => {
                   <tr key={car._id} className="border-b border-gray-800 hover:bg-gray-800/50">
                     <td className="py-2 px-4"><img src={car.images[0]} alt="car" className="w-12 h-12 object-cover rounded shadow" /></td>
                     <td className="py-2 px-4 font-bold">{car.make} <span className="text-luxe-gold">{car.model}</span> ({car.year})</td>
+                    <td className="py-2 px-4 text-xs font-bold text-gray-400">{car.dealerName || 'LuxeDrive'}</td>
                     <td className="py-2 px-4 text-gray-400">{car.category}</td>
                     <td className="py-2 px-4 italic font-bold text-gray-300">{car.countInStock || 0} In Stock</td>
                     <td className="py-2 px-4 font-mono font-bold text-luxe-gold">₹{car.pricePerDay.toLocaleString()}</td>
