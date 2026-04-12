@@ -17,6 +17,7 @@ dotenv.config({ path: envPath2 });
 connectDB();
 
 console.log('🔍 Boot Check: Google Auth ID present?', !!process.env.GOOGLE_CLIENT_ID);
+
 if (!process.env.GOOGLE_CLIENT_ID) console.warn("🚨 Warning: GOOGLE_CLIENT_ID is missing in .env. Social login will fail.");
 
 // --- CRASH PREVENTION: Global Error Listeners ---
@@ -125,6 +126,16 @@ io.on('connection', (socket) => {
       io.emit('carUnlocked', { carId, locks: activeLocks[carId] || [] });
     });
     console.log('📡 User disconnected and locks cleared');
+  });
+});
+
+// --- GLOBAL ERROR HANDLER ---
+// Captures any errors thrown in routes and logs them for PM2 debugging
+app.use((err, req, res, next) => {
+  console.error("❌ SERVER LOGIC ERROR:", err.stack);
+  res.status(500).json({ 
+    message: err.message, 
+    stack: process.env.NODE_ENV === 'production' ? '🛡️ Protected' : err.stack 
   });
 });
 
