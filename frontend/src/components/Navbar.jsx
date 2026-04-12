@@ -43,9 +43,9 @@ const Navbar = () => {
             
             {user ? (
                <>
-                 {user.role === 'admin' && (
+                 {(user.role === 'admin' || (user.role === 'provider' && user.providerStatus === 'approved')) && (
                    <Link to="/admin" className="text-sm font-black uppercase tracking-widest text-luxe-gold hover:text-white transition-colors duration-300">
-                     ♦ Admin Panel
+                     ♦ {user.role === 'admin' ? 'Admin Panel' : 'Business Center'}
                    </Link>
                  )}
                  <Link to="/profile" className="text-sm uppercase tracking-wider text-gray-300 hover:text-luxe-gold transition-colors duration-300">Profile</Link>
@@ -94,9 +94,9 @@ const Navbar = () => {
               
               {user ? (
                 <>
-                  {user.role === 'admin' && (
+                  {(user.role === 'admin' || (user.role === 'provider' && user.providerStatus === 'approved')) && (
                     <MobileLink to="/admin" className="text-luxe-gold hover:text-white bg-luxe-gold/10 hover:bg-luxe-gold/20">
-                      ♦ Operations Panel
+                      ♦ {user.role === 'admin' ? 'Operations Panel' : 'Business Center'}
                     </MobileLink>
                   )}
                   <MobileLink to="/profile" className="text-gray-300 hover:text-luxe-gold hover:bg-gray-900">Profile</MobileLink>
