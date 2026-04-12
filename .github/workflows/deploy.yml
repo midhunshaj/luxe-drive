@@ -45,8 +45,18 @@ jobs:
               cd $DEPLOY_PATH
               # Fix dubious ownership safe-directory crash
               git config --global --add safe.directory $DEPLOY_PATH
+              
+              # 📦 PERSIST UPLOADS: Backup images before reset
+              mkdir -p /home/midhun/luxe_backups
+              cp -r $DEPLOY_PATH/backend/uploads /home/midhun/luxe_backups/ || true
+              
               git fetch --all
               git reset --hard origin/main
+              
+              # 📦 RESTORE UPLOADS: Bring them back
+              cp -r /home/midhun/luxe_backups/uploads/* $DEPLOY_PATH/backend/uploads/ || true
+              # Also pull from legacy /website if it exists
+              cp -r /website/luxe-drive/backend/uploads/* $DEPLOY_PATH/backend/uploads/ || true
             fi
 
 
