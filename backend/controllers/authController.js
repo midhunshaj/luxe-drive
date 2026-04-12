@@ -6,14 +6,19 @@ const generateToken = require('../utils/generateToken');
 // @access  Public
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role, companyName } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ 
+      name, email, password, 
+      role: role && ['user', 'provider'].includes(role) ? role : 'user', 
+      companyName,
+      providerStatus: role === 'provider' ? 'pending' : 'none'
+    });
 
     if (user) {
       res.status(201).json({
@@ -21,6 +26,8 @@ const registerUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        companyName: user.companyName,
+        providerStatus: user.providerStatus,
         token: generateToken(user._id),
       });
     } else {
@@ -46,6 +53,8 @@ const authUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        companyName: user.companyName,
+        providerStatus: user.providerStatus,
         token: generateToken(user._id),
       });
     } else {
@@ -141,4 +150,30 @@ const toggleWishlist = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist };
+const getProviders = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
+    const providers = await User.find({ role: 'provider' }).select('-password');
+    res.json(providers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updateProviderStatus = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
+    const user = await User.findById(req.params.id);
+    if (user) {
+      user.providerStatus = req.body.status;
+      await user.save();
+      res.json({ message: 'Provider status updated', providerStatus: user.providerStatus });
+    } else {
+      res.status(404).json({ message: 'Provider not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist, getProviders, updateProviderStatus };

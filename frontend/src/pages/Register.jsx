@@ -9,6 +9,8 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [accountType, setAccountType] = useState('user');
+  const [companyName, setCompanyName] = useState('');
   const [customError, setCustomError] = useState('');
   
   const navigate = useNavigate();
@@ -29,7 +31,7 @@ const Register = () => {
     if (password !== confirmPassword) {
       setCustomError('Passwords do not match');
     } else {
-      dispatch(register({ name, email, password }));
+      dispatch(register({ name, email, password, role: accountType === 'provider' ? 'provider' : 'user', companyName: accountType === 'provider' ? companyName : '' }));
     }
   };
 
@@ -52,8 +54,21 @@ const Register = () => {
         )}
 
         <form onSubmit={submitHandler} className="space-y-5">
+          <div className="flex justify-center space-x-4 mb-6">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input type="radio" value="user" checked={accountType === 'user'} onChange={() => setAccountType('user')} className="text-luxe-gold focus:ring-luxe-gold" />
+              <span className="text-sm text-gray-300 font-bold tracking-widest uppercase">Customer</span>
+            </label>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input type="radio" value="provider" checked={accountType === 'provider'} onChange={() => setAccountType('provider')} className="text-luxe-gold focus:ring-luxe-gold" />
+              <span className="text-sm text-gray-300 font-bold tracking-widest uppercase">Rental Provider</span>
+            </label>
+          </div>
+
           <div>
-            <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-2">Full Legal Name</label>
+            <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-2">
+              {accountType === 'provider' ? 'Director Name' : 'Full Legal Name'}
+            </label>
             <input 
               type="text" 
               className="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors"
@@ -62,6 +77,20 @@ const Register = () => {
               required
             />
           </div>
+
+          {accountType === 'provider' && (
+            <div>
+              <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-2">Registered Company Name</label>
+              <input 
+                type="text" 
+                className="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="e.g. Enterprise Exotics"
+                required={accountType === 'provider'}
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-2">Email Address</label>

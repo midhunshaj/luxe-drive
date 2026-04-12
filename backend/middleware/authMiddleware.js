@@ -26,12 +26,14 @@ const protect = async (req, res, next) => {
   }
 };
 
-// This middleware restricts access only for Admins
+// This middleware restricts access to business operations (Admins & Approved Providers)
 const admin = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
     next();
+  } else if (req.user && req.user.role === 'provider' && req.user.providerStatus === 'approved') {
+    next();
   } else {
-    res.status(401).json({ message: 'Not authorized as an admin, access denied' });
+    res.status(401).json({ message: 'Not authorized or account pending approval' });
   }
 };
 

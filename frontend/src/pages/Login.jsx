@@ -18,7 +18,11 @@ const Login = () => {
     // If the user logs in successfully, redirect them to the fleet page
     if (isSuccess || user) {
       dispatch(reset());
-      navigate('/fleet');
+      if (user.role === 'admin' || user.role === 'provider') {
+        navigate('/admin');
+      } else {
+        navigate('/fleet');
+      }
     }
   }, [user, isSuccess, navigate, dispatch]);
 
@@ -36,7 +40,8 @@ const Login = () => {
         className="bg-gray-900 border border-gray-800 p-10 rounded-lg shadow-[0_10px_40px_rgba(0,0,0,0.5)] w-full max-w-md backdrop-blur-sm"
       >
         <h2 className="text-3xl font-bold text-center mb-8 uppercase tracking-widest text-white">
-          Sign <span className="text-luxe-gold">In</span>
+          Universal <span className="text-luxe-gold">Portal</span>
+          <p className="text-[10px] text-gray-500 mt-2 font-mono">MEMBERS / ACCREDITED PROVIDERS / SITE ADMINS</p>
         </h2>
         
         {isError && <div className="bg-red-900/40 border border-red-500 text-red-400 p-3 mb-4 rounded text-sm text-center font-medium">{message}</div>}

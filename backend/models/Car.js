@@ -9,6 +9,7 @@ const carSchema = new mongoose.Schema({
   availabilityStatus: { type: String, enum: ['available', 'rented', 'maintenance'], default: 'available' },
   countInStock: { type: Number, required: true, default: 1 },
   dealerName: { type: String, default: 'LuxeDrive Premium' },
+  providerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   // GeoJSON data structure for Map Integration
   location: {
     type: { type: String, default: 'Point' },
