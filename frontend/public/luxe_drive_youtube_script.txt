@@ -1,0 +1,34 @@
+LUXEDRIVE - THE ULTIMATE MERN STACK SHOWCASE (YOUTUBE SCRIPT)
+
+[SCENE 1: THE HOOK - 0:00 to 0:15]
+(Visual: Screen recording of the Landing Page. Scroll down slowly to show the "Beyond First Class" animation. Stop at the Booking Widget.)
+
+Host (VO): "What if you could build a car rental platform that feels more like a 5-star hotel than a website? This is LuxeDrive. Today, I'm going to show you how I built this premium MERN stack application, featuring real-time fleet management, secure payments, and a whole ecosystem for taxi drivers."
+
+[SCENE 2: THE ECOSYSTEM - 0:15 to 0:45]
+(Visual: Transition between the different portals: User Dashboard -> Provider Management -> Admin Ops Panel.)
+
+Host (VO): "Most rental apps are simple, but LuxeDrive is a complete ecosystem. We have four distinct roles: Customers can book high-end cars; Providers manage their own fleets; Admins verify identities via KYC; and we even have a specialized Airport Taxi portal where drivers can set their own availability and fares."
+
+[SCENE 3: KEY FEATURES Walkthrough - 0:45 to 1:30]
+(Visual: Typing a location into the Booking Widget, switching tabs to 'Airport Delivery'.)
+
+Host (VO): "The heart of the app is this interactive Booking Widget. It supports Home Delivery, Airport Pickups, and Yard pickups. When you switch to 'Airport Mode,' the app shifts gears into a taxi service logic, monitoring arrivals and connecting you with professional chauffeurs. Everything you see here is powered by Framer Motion for that ultra-premium, smooth feel."
+
+[SCENE 4: UNDER THE HOOD (Tech Stack) - 1:30 to 2:15]
+(Visual: Split screen - VS Code showing App.jsx and a flowchart of the MERN stack.)
+
+Host (VO): "Technically, we're pushing the MERN stack to its limits. We're using MongoDB for geo-spatial mapping, Express and Node for the backend, and React with Redux Toolkit for state management. But the secret sauce? It’s Socket.io. Our Admin Dashboard updates in real-time. No refreshes. Just pure data flow."
+
+[SCENE 5: SECURITY & PAYMENTS - 2:15 to 2:45]
+(Visual: Show a blurred license upload in the KYC section, then show the Razorpay payment modal.)
+
+Host (VO): "Security isn't an afterthought. We've implemented JWT-based session guarding and a robust KYC verification system. For payments, we've integrated Razorpay, using a dual-verification webhook to ensure every transaction is 100% secure before a car is ever released from the yard."
+
+[SCENE 6: CALL TO ACTION (Revenue Focus) - 2:45 to 3:15]
+(Visual: Recording of the new 'Technical Documentation' page on the website.)
+
+Host (VO): "There is so much more to this project, including the database architecture and the security middleware. I've written a complete Technical Deep Dive over on my website. If you want to see the full documentation, check the link in the description or visit the 'Documentation' tab on the site. Don't forget to like, subscribe, and let me know in the comments what feature I should add next!"
+
+[OUTRO: LOGO ANIMATION]
+Host (VO): "LuxeDrive. Beyond First Class. See you in the next one."
