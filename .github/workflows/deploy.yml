@@ -28,39 +28,41 @@ jobs:
           script: |
             echo "🚀 Starting LuxeDrive Deployment..."
             
-            echo "🔧 Ensuring /website directory exists with correct permissions..."
-            sudo mkdir -p /website
-            sudo chown -R $USER:$USER /website
+            echo "🚀 Starting LuxeDrive Deployment..."
             
-            if [ ! -d "/website/luxe-drive/.git" ]; then
+            # Deploy directly to user's home so they can easily find and edit files!
+            DEPLOY_PATH="/home/midhun/luxe-drive"
+            mkdir -p $DEPLOY_PATH
+            
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
               echo "📥 LuxeDrive not found. Cloning freshly..."
-              cd /website
+              cd /home/midhun
               rm -rf luxe-drive
               git clone https://github.com/midhunshaj/luxe-drive.git
               cd luxe-drive
             else
               echo "📥 LuxeDrive found! Force Syncing latest code from GitHub..."
-              cd /website/luxe-drive
+              cd $DEPLOY_PATH
               # Fix dubious ownership safe-directory crash
-              git config --global --add safe.directory /website/luxe-drive
+              git config --global --add safe.directory $DEPLOY_PATH
               git fetch --all
               git reset --hard origin/main
             fi
 
 
             echo "📦 Installing backend dependencies..."
-            cd backend
+            cd /home/midhun/luxe-drive/backend
             npm install --omit=dev
             cd ..
 
             echo "🏗️ Building React frontend..."
-            cd frontend
+            cd /home/midhun/luxe-drive/frontend
             npm install
             npm run build
             cd ..
 
             echo "♻️ Restarting backend with PM2..."
-            cd /website/luxe-drive/backend
+            cd /home/midhun/luxe-drive/backend
             if ! command -v pm2 &> /dev/null; then
               echo "⚙️ PM2 not found natively. Installing PM2 globally..."
               sudo npm install -g pm2
@@ -75,10 +77,11 @@ jobs:
             pm2 save
             cd ..
             
-            echo "🌐 Fixing NGINX permanently to point to the new /website architecture..."
+            echo "🌐 Fixing NGINX permanently to point to the new home architecture..."
             # Apply to both custom and default configs to be 100% sure
-            sudo sed -i 's|/var/www/luxe-drive|/website/luxe-drive|g' /etc/nginx/sites-available/luxedrive || true
-            sudo sed -i 's|/var/www/luxe-drive|/website/luxe-drive|g' /etc/nginx/sites-available/default || true
+            sudo sed -i 's|/website/luxe-drive|/home/midhun/luxe-drive|g' /etc/nginx/sites-available/luxedrive || true
+            sudo sed -i 's|/var/www/luxe-drive|/home/midhun/luxe-drive|g' /etc/nginx/sites-available/luxedrive || true
+            sudo sed -i 's|/var/www/luxe-drive|/home/midhun/luxe-drive|g' /etc/nginx/sites-available/default || true
             sudo nginx -t && sudo systemctl restart nginx
 
-            echo "✅ Deployment complete! LuxeDrive is live."
+            echo "✅ Deployment complete! LuxeDrive is live in /home/midhun/luxe-drive"
