@@ -20,7 +20,7 @@ if (process.env.JWT_SECRET) process.env.JWT_SECRET = process.env.JWT_SECRET.trim
 if (process.env.GOOGLE_CLIENT_ID) process.env.GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID.trim();
 
 console.log('🔍 Boot Check: Google Auth ID present?', !!process.env.GOOGLE_CLIENT_ID);
-console.log('🔍 Boot Check: JWT Secret Active? ', !!process.env.JWT_SECRET, `(Char length: ${process.env.JWT_SECRET?.length})`);
+console.log('🔍 Boot Check: JWT Secret Active? ', !!process.env.JWT_SECRET, `| Value: [${process.env.JWT_SECRET}] | (Char length: ${process.env.JWT_SECRET?.length})`);
 
 if (!process.env.GOOGLE_CLIENT_ID) console.warn("🚨 Warning: GOOGLE_CLIENT_ID is missing in .env. Social login will fail.");
 

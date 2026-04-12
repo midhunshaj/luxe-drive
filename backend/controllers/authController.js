@@ -106,6 +106,7 @@ const getUserProfile = async (req, res) => {
         providerStatus: user.providerStatus,
         companyName: user.companyName,
         wishlist: user.wishlist,
+        token: generateToken(user._id),
       });
     } else {
       res.status(404).json({ message: 'User not found' });

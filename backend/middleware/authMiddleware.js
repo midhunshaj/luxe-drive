@@ -6,9 +6,14 @@ const protect = async (req, res, next) => {
   let token;
 
   // Check if Bearer token is in the header
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      console.log("🔍 RAW AUTH HEADER: ", `[${req.headers.authorization}]`);
+      try {
+        token = req.headers.authorization.split(' ')[1];
+
+      // DEBUG: Verify secret availability during request
+      if (!process.env.JWT_SECRET) console.error("❌ AUTH FAILURE: JWT_SECRET is missing during verification!");
+      else console.log("🔍 AUTH TRACE: Verification secret length: ", process.env.JWT_SECRET.length);
 
       // Decode token to get User ID
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -17,6 +22,7 @@ const protect = async (req, res, next) => {
       req.user = await User.findById(decoded.id).select('-password');
       next();
     } catch (error) {
+      console.error("❌ AUTH ERROR DETAIL: ", error.message);
       res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }
