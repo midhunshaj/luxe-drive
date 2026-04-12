@@ -34,6 +34,12 @@ const createCheckoutSession = async (req, res) => {
     };
 
     console.log("🟢 API SECURE GATEWAY: Hitting Razorpay servers with key: " + razorpay.key_id);
+    
+    if (razorpay.key_id === 'dummy_id' || razorpay.key_id.length < 5) {
+      console.error("❌ CRITICAL: Valid RAZORPAY_KEY_ID missing in .env!");
+      return res.status(500).json({ message: 'LuxeDrive Payment System is misconfigured. RAZORPAY_KEY_ID is missing.' });
+    }
+
     const order = await razorpay.orders.create(options);
     console.log("🟢 200 SUCCESS API GATEWAY: Order created ID: ", order.id);
 
@@ -44,8 +50,13 @@ const createCheckoutSession = async (req, res) => {
 
   } catch (error) {
     console.error("🚨🚨🚨 FATAL NODEJS RAZORPAY FAILURE 🚨🚨🚨");
-    console.error("Exact Reason: ", error);
-    res.status(500).json({ message: 'Razorpay Gateway Blocked Request', error: error.message });
+    console.error("Razorpay Error Code: ", error.error?.code);
+    console.error("Razorpay Error Desc: ", error.error?.description);
+    console.error("Full Trace: ", error);
+    res.status(500).json({ 
+      message: 'Razorpay Gateway Blocked Request', 
+      error: error.error?.description || error.message 
+    });
   }
 };
 
