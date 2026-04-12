@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, reset, googleLogin } from '../features/authSlice';
-import { GoogleLogin } from '@react-oauth/google';
+import { login, reset } from '../features/authSlice';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -30,10 +29,6 @@ const Login = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     dispatch(login({ email, password }));
-  };
-
-  const handleGoogleSuccess = (credentialResponse) => {
-    dispatch(googleLogin(credentialResponse.credential));
   };
 
   return (
@@ -84,23 +79,6 @@ const Login = () => {
             {isLoading ? 'Authenticating...' : 'Access Account'}
           </button>
         </form>
-
-        <div className="mt-6 flex items-center justify-between">
-           <hr className="w-full border-gray-800" />
-           <span className="px-4 text-[10px] uppercase tracking-widest text-gray-600 font-bold whitespace-nowrap">Or Continue With</span>
-           <hr className="w-full border-gray-800" />
-        </div>
-
-        <div className="mt-6 flex justify-center">
-            <GoogleLogin
-               onSuccess={handleGoogleSuccess}
-               onError={() => console.log('Login Failed')}
-               theme="filled_black"
-               shape="pill"
-               width="320"
-               text="continue_with"
-            />
-        </div>
 
         <div className="mt-8 text-center text-sm text-gray-400">
           Not a member yet?{' '}

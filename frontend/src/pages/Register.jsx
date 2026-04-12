@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import { register, reset } from '../features/authSlice';
+import { register, reset, googleLogin } from '../features/authSlice';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -24,6 +25,10 @@ const Register = () => {
       navigate('/fleet');
     }
   }, [user, isSuccess, navigate, dispatch]);
+
+  const handleGoogleSuccess = (credentialResponse) => {
+    dispatch(googleLogin(credentialResponse.credential));
+  };
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -134,7 +139,24 @@ const Register = () => {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-gray-400">
+        <div className="mt-8 flex items-center justify-between">
+           <hr className="w-full border-gray-800" />
+           <span className="px-4 text-[10px] uppercase tracking-widest text-gray-600 font-bold whitespace-nowrap">Or Faster Entry</span>
+           <hr className="w-full border-gray-800" />
+        </div>
+
+        <div className="mt-6 flex justify-center">
+            <GoogleLogin
+               onSuccess={handleGoogleSuccess}
+               onError={() => console.log('Google Signup Failed')}
+               theme="filled_black"
+               shape="pill"
+               width="340"
+               text="signup_with"
+            />
+        </div>
+
+        <div className="mt-10 text-center text-sm text-gray-400">
           Already a member?{' '}
           <Link to="/login" className="text-luxe-gold hover:text-yellow-400 hover:underline transition-colors">Sign In here</Link>
         </div>
