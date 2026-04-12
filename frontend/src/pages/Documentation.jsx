@@ -106,11 +106,10 @@ const Documentation = () => {
               <li><span className="text-red-500">Admin:</span> Global Command & Control</li>
             </ul>
           </section>
-on>
 
           <section>
             <h2 className="text-white text-xl font-bold uppercase tracking-widest border-l-4 border-luxe-gold pl-4 mb-4 font-serif italic">
-              3. Financial Infrastructure
+              5. Financial Infrastructure
             </h2>
             <p className="leading-relaxed text-sm">
               We leverage the <strong>Razorpay Multi-Currency SDK</strong> to handle transactions. The flow includes a server-side signature validation that compares the `razorpay_payment_id` and `razorpay_signature` using <strong>HMAC SHA256</strong> encryption, ensuring zero risk of double-spend or spoofed payments.
@@ -124,7 +123,7 @@ on>
 
           <section>
             <h2 className="text-white text-xl font-bold uppercase tracking-widest mb-4">
-              4. Real-Time Inventory via WebSockets
+              6. Real-Time Inventory via WebSockets
             </h2>
             <p className="leading-relaxed text-sm">
               To prevent over-booking, LuxeDrive uses <strong>Socket.io</strong> to broadcast inventory updates. When a user completes a checkout, a `syncInventory` event is emitted globally, updating the available stock count on every active client without requiring a REST polling cycle.
@@ -132,7 +131,7 @@ on>
           </section>
 
           <section className="bg-luxe-gold/5 border border-luxe-gold/20 p-6 rounded-xl">
-             <h2 className="text-luxe-gold text-lg font-bold uppercase tracking-widest mb-2 font-serif">5. Strategic Roadmap</h2>
+             <h2 className="text-luxe-gold text-lg font-bold uppercase tracking-widest mb-2 font-serif">7. Strategic Roadmap</h2>
              <p className="text-xs text-gray-400 mb-4 uppercase tracking-[0.2em] font-black font-sans">Future-Proofing the Fleet</p>
              <p className="text-sm italic leading-relaxed">
                The next phase of LuxeDrive includes <strong>AI-Optimized Dynamic Pricing</strong> based on demand metrics and a <strong>Real-time Telematics Integration</strong> to monitor vehicle health and location during high-value rentals.
