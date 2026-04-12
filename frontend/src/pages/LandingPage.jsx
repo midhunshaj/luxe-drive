@@ -21,7 +21,7 @@ const LandingPage = () => {
         description: "Buy me a coffee!",
         order_id: order.id,
         handler: function (response) {
-          alert(`Thank you for your donation of ₹29! ❤️ Transaction ID: ${response.razorpay_payment_id}`);
+          alert(`Thank you for your donation of ₹49! ❤️ Transaction ID: ${response.razorpay_payment_id}`);
         },
         prefill: { name: "Valued Visitor" },
         theme: { color: "#FF5F5F" } // Coffee Red
@@ -114,7 +114,7 @@ const LandingPage = () => {
               >
                 <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] group-hover:animate-shimmer"></span>
                 <span className="relative flex items-center tracking-[0.15em] uppercase text-sm">
-                  ☕ Buy me a coffee!! <span className="ml-3 text-lg">₹29</span>
+                  ☕ Buy me a coffee!! <span className="ml-3 text-lg">₹49</span>
                 </span>
               </motion.button>
               

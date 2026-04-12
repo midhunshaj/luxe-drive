@@ -218,7 +218,7 @@ const updateBookingStatus = async (req, res) => {
 const createDonationOrder = async (req, res) => {
   try {
     const options = {
-      amount: 2900, // 29.00 INR in paise
+      amount: 4900, // 49.00 INR in paise
       currency: "INR",
       receipt: `don_${Date.now()}`,
       notes: { type: 'donation' }
