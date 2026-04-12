@@ -93,10 +93,9 @@ jobs:
             cd ..
             
             echo "🌐 Fixing NGINX permanently to point to the new home architecture..."
-            # Apply to both custom and default configs to be 100% sure
-            sudo sed -i 's|/website/luxe-drive|/home/midhun/luxe-drive|g' /etc/nginx/sites-available/luxedrive || true
-            sudo sed -i 's|/var/www/luxe-drive|/home/midhun/luxe-drive|g' /etc/nginx/sites-available/luxedrive || true
-            sudo sed -i 's|/var/www/luxe-drive|/home/midhun/luxe-drive|g' /etc/nginx/sites-available/default || true
+            # Force replace ANY root path with the new home path
+            sudo sed -i 's|root .*;|root /home/midhun/luxe-drive/frontend/dist;|g' /etc/nginx/sites-available/luxedrive || true
+            sudo sed -i 's|root .*;|root /home/midhun/luxe-drive/frontend/dist;|g' /etc/nginx/sites-available/default || true
             sudo nginx -t && sudo systemctl restart nginx
 
             echo "✅ Deployment complete! LuxeDrive is live in /home/midhun/luxe-drive"
