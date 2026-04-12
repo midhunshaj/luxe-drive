@@ -1,6 +1,7 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Booking = require('../models/Booking');
+const Car = require('../models/Car');
 const nodemailer = require('nodemailer');
 
 // 🚀 CRITICAL FIX: Trim whitespace off the .env secrets to completely prevent Linux copy-paste HTTP 401 Unauthorized errors!
@@ -112,23 +113,36 @@ const getMyBookings = async (req, res) => {
   }
 };
 
-// @desc    Get all bookings (Admin only)
+// @desc    Get all bookings (Admin & Provider)
 const getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find({}).populate('user', 'name email').populate('car').sort({ createdAt: -1 });
+    let query = {};
+    if (req.user.role === 'provider') {
+      // Find all cars belonging to this provider to filter bookings
+      const providerCars = await Car.find({ providerId: req.user._id }).select('_id');
+      const carIds = providerCars.map(c => c._id);
+      query = { car: { $in: carIds } };
+    }
+
+    const bookings = await Booking.find(query).populate('user', 'name email').populate('car').sort({ createdAt: -1 });
     res.status(200).json(bookings);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching all bookings', error: error.message });
   }
 };
 
-// @desc    Update booking status (Admin only)
+// @desc    Update booking status (Admin & Owner Provider)
 const updateBookingStatus = async (req, res) => {
   try {
     const { dealerStatus } = req.body;
     const booking = await Booking.findById(req.params.id).populate('user').populate('car');
 
     if (booking) {
+      // Security: Only allow update if Admin OR if Provider owns the vehicle
+      if (req.user.role === 'provider' && booking.car?.providerId?.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: 'Not authorized to manage this booking' });
+      }
+
       booking.dealerStatus = dealerStatus;
       const updatedBooking = await booking.save();
 
