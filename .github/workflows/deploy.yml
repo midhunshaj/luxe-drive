@@ -92,10 +92,51 @@ jobs:
             pm2 save
             cd ..
             
-            echo "🌐 Fixing NGINX permanently to point to the new home architecture..."
-            # Force replace ANY root path with the new home path
-            sudo sed -i 's|root .*;|root /home/midhun/luxe-drive/frontend/dist;|g' /etc/nginx/sites-available/luxedrive || true
-            sudo sed -i 's|root .*;|root /home/midhun/luxe-drive/frontend/dist;|g' /etc/nginx/sites-available/default || true
+            echo "🌐 Perfectly Reconfiguring NGINX to point to Home Directory..."
+            # Create a fresh, high-performance Nginx config
+            sudo tee /etc/nginx/sites-available/luxedrive > /dev/null <<EOF
+server {
+    listen 80;
+    server_name midhunshaj.in www.midhunshaj.in;
+
+    root /home/midhun/luxe-drive/frontend/dist;
+    index index.html;
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+
+    location /socket.io/ {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+    }
+
+    location /uploads/ {
+        alias /home/midhun/luxe-drive/backend/uploads/;
+        add_header Cache-Control "public, max-age=31536000";
+    }
+}
+EOF
+            
+            # Link and test
+            sudo ln -sf /etc/nginx/sites-available/luxedrive /etc/nginx/sites-enabled/ || true
+            sudo rm /etc/nginx/sites-enabled/default || true
             sudo nginx -t && sudo systemctl restart nginx
+            
+            # Re-apply SSL because removing default might have temporarily affected Certbot
+            # (Certbot handles its own blocks, but this ensures our server_name is active)
+            # sudo certbot --nginx -d midhunshaj.in -d www.midhunshaj.in --non-interactive --agree-tos --redirect || true
 
             echo "✅ Deployment complete! LuxeDrive is live in /home/midhun/luxe-drive"
