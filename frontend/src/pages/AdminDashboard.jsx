@@ -84,6 +84,7 @@ const AdminDashboard = () => {
       console.error(error);
       const backendError = error.response?.data?.message || error.message || "Unknown error";
       alert(`Failed to update status: ${backendError}`);
+    }
   };
 
   const updateProviderStatus = async (providerId, status) => {
@@ -346,7 +347,7 @@ const AdminDashboard = () => {
               </tbody>
             </table>
           </motion.div>
-        ) : (
+        ) : activeTab === 'bookings' ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-gray-900 border border-gray-800 p-8 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-x-auto">
              <h2 className="text-3xl font-bold uppercase tracking-widest mb-8 border-b border-gray-800 pb-4">
               <span className="text-luxe-gold">{user?.role === 'admin' ? 'Global' : 'Your'}</span> Reservations Database
@@ -469,8 +470,6 @@ const AdminDashboard = () => {
             )}
           </motion.div>
         ) : null}
-          </motion.div>
-        )}
       </div>
     </div>
   );
