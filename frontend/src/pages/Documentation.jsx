@@ -30,79 +30,68 @@ const Documentation = () => {
         <div className="prose prose-invert prose-luxe max-w-none space-y-6">
           
           <section>
-            <h2 className="text-white text-2xl font-bold uppercase tracking-widest border-l-4 border-luxe-gold pl-6 mb-6 font-serif italic">
-              1. The MERN Stack Foundation
+            <h2 className="text-white text-xl font-bold uppercase tracking-widest border-l-4 border-luxe-gold pl-4 mb-4 font-serif italic">
+              1. Full-Stack Data Architecture
             </h2>
-            <p className="leading-relaxed text-lg font-light">
-              LuxeDrive is architected on the <strong>MERN (MongoDB, Express, React, Node.js)</strong> stack, a powerhouse combination for building scalable, data-intensive web applications. By utilizing a unified JavaScript environment, the platform ensures seamless data flow between the client-side interactivity and the server-side logic.
+            <p className="leading-relaxed text-base font-light">
+              LuxeDrive operates on a distributed <strong>MERN stack</strong>, utilizing <strong>MongoDB Atlas</strong> for global data persistence. Our schema architecture is designed for high-concurrency rental environments, featuring:
             </p>
-            <p className="leading-relaxed mt-4">
-              <strong>MongoDB</strong> serves as our primary document-store database, providing the flexibility needed to handle complex data structures like vehicle specifications, nested booking histories, and geo-spatial location data. The use of <strong>Mongoose</strong> as an ODM (Object Data Modeling) library allows for robust schema validation and middleware hooks, ensuring data integrity at every layer.
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div className="bg-gray-902 border border-gray-800 p-4 rounded-xl">
+                <p className="text-luxe-gold text-[10px] font-black uppercase mb-1">Car Model</p>
+                <p className="text-xs text-gray-500">Geo-spatial indexing for location-based searches, nested review arrays, and dynamic availability status tracking.</p>
+              </div>
+              <div className="bg-gray-902 border border-gray-800 p-4 rounded-xl">
+                <p className="text-luxe-gold text-[10px] font-black uppercase mb-1">Booking Model</p>
+                <p className="text-xs text-gray-500">Atomic transaction links between Users and Vehicles, with built-in Razorpay order tracking and license verification.</p>
+              </div>
+            </div>
           </section>
 
-          <section className="bg-gray-900/50 p-8 rounded-2xl border border-gray-800">
-            <h2 className="text-white text-2xl font-bold uppercase tracking-widest mb-6">
-              2. Advanced State Management & Redux
+          <section className="bg-gray-900/40 p-6 rounded-2xl border border-gray-800">
+            <h2 className="text-white text-xl font-bold uppercase tracking-widest mb-4">
+              2. Logic-Driven Role System (RBAC)
             </h2>
-            <p className="leading-relaxed">
-              To handle the platform's high level of interactivity—such as real-time fleet filtering, session persistence, and multi-step booking flows—we employ <strong>Redux Toolkit (RTK)</strong>. 
+            <p className="text-sm leading-relaxed mb-4">
+              Security is enforced through a strict Role-Based Access Control system. Each request is validated via a custom <strong>Passport.js-inspired JWT middleware</strong>.
             </p>
-            <ul className="list-disc pl-6 space-y-3 mt-4 text-gray-400">
-              <li><strong>Auth Slices:</strong> Manage secure JWT-based authentication tokens and user profiles across the entire app.</li>
-              <li><strong>Car Slices:</strong> Handle the global vehicle state, including real-time availability updates via Socket.io.</li>
-              <li><strong>Booking Slices:</strong> Orchestrate the transaction flow, from initial selection to payment gateway confirmation.</li>
+            <ul className="grid grid-cols-2 gap-x-8 gap-y-2 text-[11px] font-bold text-gray-500 uppercase tracking-tighter">
+              <li><span className="text-white">Customer:</span> Booking & Profile Management</li>
+              <li><span className="text-luxe-gold">Provider:</span> Fleet & Inventory Control</li>
+              <li><span className="text-blue-400">Taxi Driver:</span> Availability & Fare Syncing</li>
+              <li><span className="text-red-500">Admin:</span> Global KYC & Financial Audits</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-white text-2xl font-bold uppercase tracking-widest border-l-4 border-luxe-gold pl-6 mb-6 font-serif italic">
-              3. Security Architecture & JWT
+            <h2 className="text-white text-xl font-bold uppercase tracking-widest border-l-4 border-luxe-gold pl-4 mb-4 font-serif italic">
+              3. Financial Infrastructure
             </h2>
-            <p className="leading-relaxed">
-              Security is the cornerstone of the LuxeDrive experience. Our authentication system utilizes <strong>JSON Web Tokens (JWT)</strong> for stateless, secure user sessions. When a user logs in, the backend generates an encrypted token containing the user's signature and permissions (Role-Based Access Control).
+            <p className="leading-relaxed text-sm">
+              We leverage the <strong>Razorpay Multi-Currency SDK</strong> to handle transactions. The flow includes a server-side signature validation that compares the `razorpay_payment_id` and `razorpay_signature` using <strong>HMAC SHA256</strong> encryption, ensuring zero risk of double-spend or spoofed payments.
             </p>
-            <div className="bg-luxe-gold/5 border border-luxe-gold/20 p-6 rounded-xl mt-6">
-              <p className="text-xs text-luxe-gold font-black uppercase tracking-widest mb-2">Technical Note: Session Guard</p>
-              <p className="text-sm italic">
-                We've implemented a custom "Session Guard" middleware that periodically validates the token's integrity against the browser's local storage, preventing "Not Authorized" errors even in unstable network conditions.
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-white text-2xl font-bold uppercase tracking-widest mb-6">
-              4. Payment Gateway & Financial Integrity
-            </h2>
-            <p className="leading-relaxed">
-              Transactions are handled via the <strong>Razorpay Payment Gateway</strong> integration. This ensures that sensitive credit card and banking information never touches our servers, complying with global PCI-DSS standards. The integration uses a dual-verification webhook system:
-            </p>
-            <ol className="list-decimal pl-6 space-y-4 mt-6 text-gray-400">
-              <li><strong>Order Initiation:</strong> The server creates a unique `order_id` in Razorpay's ledger.</li>
-              <li><strong>Client Checkout:</strong> The user completes payment via a secure, encrypted modal.</li>
-              <li><strong>Server-Side Verification:</strong> Our Node.js backend verifies the Razorpay signature to ensure the payment is authentic before updating the database.</li>
-            </ol>
           </section>
 
           {/* Middle Ad Slot */}
-          <div className="py-8">
+          <div className="py-4">
             <GoogleAd slot="REPLACE_WITH_DOCS_MIDDLE_SLOT" />
           </div>
 
           <section>
-            <h2 className="text-white text-2xl font-bold uppercase tracking-widest border-l-4 border-luxe-gold pl-6 mb-6 font-serif italic">
-              5. Real-Time Fleet Operations
+            <h2 className="text-white text-xl font-bold uppercase tracking-widest mb-4">
+              4. Real-Time Inventory via WebSockets
             </h2>
-            <p className="leading-relaxed">
-              For administrative and provider roles, LuxeDrive provides a real-time <strong>Operations Control Panel</strong>. Using <strong>Socket.io</strong>, we maintain a persistent WebSocket connection between the server and the admin dashboard. This allows for instant updates to vehicle stock, booking statuses, and KYC verification queues without requiring a page refresh.
+            <p className="leading-relaxed text-sm">
+              To prevent over-booking, LuxeDrive uses <strong>Socket.io</strong> to broadcast inventory updates. When a user completes a checkout, a `syncInventory` event is emitted globally, updating the available stock count on every active client without requiring a REST polling cycle.
             </p>
           </section>
 
-          <section className="border-t border-gray-900 pt-12 text-center">
-            <h3 className="text-luxe-gold font-bold uppercase tracking-widest mb-4 italic">Scaling the Future</h3>
-            <p className="text-sm text-gray-500 max-w-xl mx-auto leading-relaxed">
-              LuxeDrive is built with a microservices-ready structure, allowing for easy migration to distributed systems as our fleet and user base continue to grow into the next era of luxury mobility.
-            </p>
+          <section className="bg-luxe-gold/5 border border-luxe-gold/20 p-6 rounded-xl">
+             <h2 className="text-luxe-gold text-lg font-bold uppercase tracking-widest mb-2 font-serif">5. Strategic Roadmap</h2>
+             <p className="text-xs text-gray-400 mb-4 uppercase tracking-[0.2em] font-black font-sans">Future-Proofing the Fleet</p>
+             <p className="text-sm italic leading-relaxed">
+               The next phase of LuxeDrive includes <strong>AI-Optimized Dynamic Pricing</strong> based on demand metrics and a <strong>Real-time Telematics Integration</strong> to monitor vehicle health and location during high-value rentals.
+             </p>
           </section>
 
         </div>
