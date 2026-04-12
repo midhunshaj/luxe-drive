@@ -23,6 +23,7 @@ const Fleet = () => {
   // Real-time Locking State (Maps carId to array of user-locks)
   const [lockedCars, setLockedCars] = useState({}); 
   const [socket, setSocket] = useState(null);
+  const [myId, setMyId] = useState(null);
 
   useEffect(() => {
     dispatch(getCars());
@@ -34,6 +35,11 @@ const Fleet = () => {
       transports: ['websocket', 'polling']
     });
     setSocket(newSocket);
+
+    newSocket.on('connect', () => {
+      console.log("📡 Connected with Session ID:", newSocket.id);
+      setMyId(newSocket.id);
+    });
 
     newSocket.on('initialLocks', (locks) => setLockedCars(locks));
     newSocket.on('carLocked', ({ carId, locks }) => {
@@ -77,7 +83,8 @@ const Fleet = () => {
     
     // Check if the car is FULLY occupied by other users
     // Check if the car is FULLY occupied by other sessions
-    const currentOccupancy = (lockedCars[car._id] || []).filter(lock => lock.socketId !== socket?.id).length;
+    // Using myId from state to ensure reactivity
+    const currentOccupancy = (lockedCars[car._id] || []).filter(lock => lock.socketId !== myId).length;
     if (currentOccupancy >= car.countInStock) {
       alert("All available units of this vehicle are currently being reserved by other clients. Please wait 60 seconds.");
       return;
@@ -191,8 +198,8 @@ const Fleet = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {cars.map((car, index) => {
-              // A car is ONLY considered "Locked" if all physical units are being occupied by other sessions
-              const activeUserLocks = (lockedCars[car._id] || []).filter(lock => lock.socketId !== socket?.id);
+              // A car is ONLY considered "Locked" if all physical units are being occupied by other users/sessions
+              const activeUserLocks = (lockedCars[car._id] || []).filter(lock => lock.socketId !== myId);
               const isLocked = activeUserLocks.length >= car.countInStock;
               
               return (
