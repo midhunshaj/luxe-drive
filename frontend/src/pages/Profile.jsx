@@ -20,6 +20,13 @@ const Profile = () => {
     idProofBack: ''
   });
   
+  const [isUploading, setIsUploading] = useState({
+    licenseFront: false,
+    licenseBack: false,
+    idProofFront: false,
+    idProofBack: false
+  });
+  
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -42,6 +49,7 @@ const Profile = () => {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append('image', file);
+    setIsUploading(prev => ({ ...prev, [field]: true }));
     try {
       const { data } = await axios.post('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -51,6 +59,8 @@ const Profile = () => {
     } catch (error) {
       console.error(error);
       setMessage('Upload failed.');
+    } finally {
+      setIsUploading(prev => ({ ...prev, [field]: false }));
     }
   };
 
@@ -125,33 +135,45 @@ const Profile = () => {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="aspect-video bg-gray-800 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-700 hover:border-luxe-gold/50 cursor-pointer overflow-hidden group relative">
-                       {profileData.licenseFront || user?.kycDetails?.licenseFront ? (
+                       {isUploading.licenseFront ? (
+                         <div className="flex flex-col items-center">
+                            <div className="w-6 h-6 border-2 border-luxe-gold border-t-transparent rounded-full animate-spin mb-2"></div>
+                            <span className="text-[10px] uppercase font-bold text-luxe-gold animate-pulse">Processing...</span>
+                         </div>
+                       ) : profileData.licenseFront || user?.kycDetails?.licenseFront ? (
                          <>
-                           <img src={profileData.licenseFront || user?.kycDetails?.licenseFront} className="w-full h-full object-cover" />
-                           <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-white underline decoration-luxe-gold decoration-2">Replace File</span>
+                           <img src={profileData.licenseFront || user?.kycDetails?.licenseFront} className="w-full h-full object-cover shadow-inner" />
+                           <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-white border-b-2 border-luxe-gold pb-1 shadow-lg">Change Photo</span>
                               <input type="file" className="hidden" onChange={(e) => handleKycUpload(e, 'licenseFront')} />
                            </label>
                          </>
                        ) : (
-                         <label className="cursor-pointer text-center p-2 w-full h-full flex items-center justify-center">
-                            <span className="text-xs font-bold text-gray-500 group-hover:text-luxe-gold">Add License Front</span>
+                         <label className="cursor-pointer text-center p-2 w-full h-full flex flex-col items-center justify-center">
+                            <span className="text-xl mb-1 opacity-50 group-hover:opacity-100 transition-opacity">📸</span>
+                            <span className="text-[10px] font-bold text-gray-500 group-hover:text-luxe-gold uppercase tracking-tighter">Add License Front</span>
                             <input type="file" className="hidden" onChange={(e) => handleKycUpload(e, 'licenseFront')} />
                          </label>
                        )}
                     </div>
                     <div className="aspect-video bg-gray-800 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-700 hover:border-luxe-gold/50 cursor-pointer overflow-hidden group relative">
-                       {profileData.licenseBack || user?.kycDetails?.licenseBack ? (
+                       {isUploading.licenseBack ? (
+                         <div className="flex flex-col items-center">
+                            <div className="w-6 h-6 border-2 border-luxe-gold border-t-transparent rounded-full animate-spin mb-2"></div>
+                            <span className="text-[10px] uppercase font-bold text-luxe-gold animate-pulse">Processing...</span>
+                         </div>
+                       ) : profileData.licenseBack || user?.kycDetails?.licenseBack ? (
                          <>
-                           <img src={profileData.licenseBack || user?.kycDetails?.licenseBack} className="w-full h-full object-cover" />
-                           <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-white underline decoration-luxe-gold decoration-2">Replace File</span>
+                           <img src={profileData.licenseBack || user?.kycDetails?.licenseBack} className="w-full h-full object-cover shadow-inner" />
+                           <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-white border-b-2 border-luxe-gold pb-1 shadow-lg">Change Photo</span>
                               <input type="file" className="hidden" onChange={(e) => handleKycUpload(e, 'licenseBack')} />
                            </label>
                          </>
                        ) : (
-                         <label className="cursor-pointer text-center p-2 w-full h-full flex items-center justify-center">
-                            <span className="text-xs font-bold text-gray-500 group-hover:text-luxe-gold">Add License Back</span>
+                         <label className="cursor-pointer text-center p-2 w-full h-full flex flex-col items-center justify-center">
+                            <span className="text-xl mb-1 opacity-50 group-hover:opacity-100 transition-opacity">📸</span>
+                            <span className="text-[10px] font-bold text-gray-500 group-hover:text-luxe-gold uppercase tracking-tighter">Add License Back</span>
                             <input type="file" className="hidden" onChange={(e) => handleKycUpload(e, 'licenseBack')} />
                          </label>
                        )}
@@ -173,33 +195,45 @@ const Profile = () => {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="aspect-video bg-gray-800 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-700 hover:border-luxe-gold/50 cursor-pointer overflow-hidden group relative">
-                       {profileData.idProofFront || user?.kycDetails?.idProofFront ? (
+                       {isUploading.idProofFront ? (
+                         <div className="flex flex-col items-center">
+                            <div className="w-6 h-6 border-2 border-luxe-gold border-t-transparent rounded-full animate-spin mb-2"></div>
+                            <span className="text-[10px] uppercase font-bold text-luxe-gold animate-pulse">Processing...</span>
+                         </div>
+                       ) : profileData.idProofFront || user?.kycDetails?.idProofFront ? (
                          <>
-                           <img src={profileData.idProofFront || user?.kycDetails?.idProofFront} className="w-full h-full object-cover" />
-                           <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-white underline decoration-luxe-gold decoration-2">Replace File</span>
+                           <img src={profileData.idProofFront || user?.kycDetails?.idProofFront} className="w-full h-full object-cover shadow-inner" />
+                           <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-white border-b-2 border-luxe-gold pb-1 shadow-lg">Change Photo</span>
                               <input type="file" className="hidden" onChange={(e) => handleKycUpload(e, 'idProofFront')} />
                            </label>
                          </>
                        ) : (
-                         <label className="cursor-pointer text-center p-2 w-full h-full flex items-center justify-center">
-                            <span className="text-xs font-bold text-gray-500 group-hover:text-luxe-gold">Add Id Proof Front</span>
+                         <label className="cursor-pointer text-center p-2 w-full h-full flex flex-col items-center justify-center">
+                            <span className="text-xl mb-1 opacity-50 group-hover:opacity-100 transition-opacity">📸</span>
+                            <span className="text-[10px] font-bold text-gray-500 group-hover:text-luxe-gold uppercase tracking-tighter">Add Id Proof Front</span>
                             <input type="file" className="hidden" onChange={(e) => handleKycUpload(e, 'idProofFront')} />
                          </label>
                        )}
                     </div>
                     <div className="aspect-video bg-gray-800 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-700 hover:border-luxe-gold/50 cursor-pointer overflow-hidden group relative">
-                       {profileData.idProofBack || user?.kycDetails?.idProofBack ? (
+                       {isUploading.idProofBack ? (
+                         <div className="flex flex-col items-center">
+                            <div className="w-6 h-6 border-2 border-luxe-gold border-t-transparent rounded-full animate-spin mb-2"></div>
+                            <span className="text-[10px] uppercase font-bold text-luxe-gold animate-pulse">Processing...</span>
+                         </div>
+                       ) : profileData.idProofBack || user?.kycDetails?.idProofBack ? (
                          <>
-                           <img src={profileData.idProofBack || user?.kycDetails?.idProofBack} className="w-full h-full object-cover" />
-                           <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-white underline decoration-luxe-gold decoration-2">Replace File</span>
+                           <img src={profileData.idProofBack || user?.kycDetails?.idProofBack} className="w-full h-full object-cover shadow-inner" />
+                           <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-white border-b-2 border-luxe-gold pb-1 shadow-lg">Change Photo</span>
                               <input type="file" className="hidden" onChange={(e) => handleKycUpload(e, 'idProofBack')} />
                            </label>
                          </>
                        ) : (
-                         <label className="cursor-pointer text-center p-2 w-full h-full flex items-center justify-center">
-                            <span className="text-xs font-bold text-gray-500 group-hover:text-luxe-gold">Add Id Proof Back</span>
+                         <label className="cursor-pointer text-center p-2 w-full h-full flex flex-col items-center justify-center">
+                            <span className="text-xl mb-1 opacity-50 group-hover:opacity-100 transition-opacity">📸</span>
+                            <span className="text-[10px] font-bold text-gray-500 group-hover:text-luxe-gold uppercase tracking-tighter">Add Id Proof Back</span>
                             <input type="file" className="hidden" onChange={(e) => handleKycUpload(e, 'idProofBack')} />
                          </label>
                        )}
