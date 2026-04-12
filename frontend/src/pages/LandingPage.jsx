@@ -83,7 +83,7 @@ const LandingPage = () => {
             
             <Link to="/documentation">
               <button className="border border-white text-white font-bold uppercase text-sm tracking-widest px-10 py-4 rounded hover:bg-white hover:text-black transition-all duration-300">
-                Learn More
+                Documentation
               </button>
             </Link>
           </motion.div>
