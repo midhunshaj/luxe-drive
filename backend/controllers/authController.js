@@ -117,22 +117,24 @@ const updateUserProfile = async (req, res) => {
       user.phone = req.body.phone || user.phone;
       user.address = req.body.address || user.address;
       
-      // Update KYC Details
-      user.kycDetails = {
-        licenseFront: req.body.licenseFront || user.kycDetails?.licenseFront,
-        licenseBack: req.body.licenseBack || user.kycDetails?.licenseBack,
-        idProofFront: req.body.idProofFront || user.kycDetails?.idProofFront,
-        idProofBack: req.body.idProofBack || user.kycDetails?.idProofBack
+      // Safety check for KYC details initialization
+      const kyc = {
+        licenseFront: req.body.licenseFront || (user.kycDetails ? user.kycDetails.licenseFront : ''),
+        licenseBack: req.body.licenseBack || (user.kycDetails ? user.kycDetails.licenseBack : ''),
+        idProofFront: req.body.idProofFront || (user.kycDetails ? user.kycDetails.idProofFront : ''),
+        idProofBack: req.body.idProofBack || (user.kycDetails ? user.kycDetails.idProofBack : '')
       };
+      
+      user.kycDetails = kyc;
 
-      // Auto-transition status if docs are complete
-      if (user.kycDetails.licenseFront && user.kycDetails.licenseBack && 
-          user.kycDetails.idProofFront && user.kycDetails.idProofBack && 
-          user.kycStatus === 'pending') {
-        user.kycStatus = 'submitted';
+      // Logic: If all 4 fields are now populated, move status to 'submitted'
+      if (kyc.licenseFront && kyc.licenseBack && kyc.idProofFront && kyc.idProofBack) {
+        if (user.kycStatus === 'pending') {
+          user.kycStatus = 'submitted';
+        }
       }
 
-      if (req.body.password) {
+      if (req.body.password && req.body.password.trim() !== '') {
         user.password = req.body.password;
       }
 
@@ -144,7 +146,7 @@ const updateUserProfile = async (req, res) => {
         email: updatedUser.email,
         phone: updatedUser.phone,
         address: updatedUser.address,
-        kycStatus: updatedUser.kycStatus,
+        kycStatus: updatedUser.kycStatus || 'pending',
         kycDetails: updatedUser.kycDetails,
         role: updatedUser.role,
         providerStatus: updatedUser.providerStatus,
@@ -153,10 +155,11 @@ const updateUserProfile = async (req, res) => {
         token: generateToken(updatedUser._id),
       });
     } else {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: 'User mapping lost: Account not found.' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Profile Update Internal Failure:", error);
+    res.status(400).json({ message: `Secure Update Failed: ${error.message}` });
   }
 };
 
