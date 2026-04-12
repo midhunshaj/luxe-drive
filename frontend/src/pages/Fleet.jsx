@@ -203,18 +203,23 @@ const Fleet = () => {
       setShowModal(false);
       setPaymentLoadingId(selectedCar._id);
 
+      console.log("💳 INITIALIZING PAYMENT: Checking Razorpay library...");
       if (typeof window === 'undefined' || !window.Razorpay) {
-        alert("Payment Gateway Error. Please refresh.");
+        alert("🚨 PAYMENT GATEWAY NOT LOADED: Your browser may have blocked the checkout script (AdBlocker/NoScript). Please refresh or disable blockers.");
         setPaymentLoadingId(null);
         socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
         return;
       }
 
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      console.log("💳 HITTING BACKEND: Requesting Order ID for: ", selectedCar.model);
+      
       const { data: order } = await axios.post('/api/bookings/checkout', {
         carId: selectedCar._id,
         pricePerDay: selectedCar.pricePerDay
       }, config);
+
+      console.log("💳 ORDER RECEIVED: ID: ", order.id);
 
       const options = {
         key: 'rzp_live_SX7dA0kgUoreAg',
@@ -225,6 +230,7 @@ const Fleet = () => {
         order_id: order.id,
         handler: async function (response) {
           try {
+            console.log("💳 PAYMENT SUCCESSFUL: Verifying signature...");
             const verifyRes = await axios.post('/api/bookings/verify', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -243,13 +249,14 @@ const Fleet = () => {
                navigate('/my-bookings'); 
             }
           } catch (err) {
-            console.error(err);
-            alert("Verification Failed.");
+            console.error("❌ VERIFICATION ERROR: ", err);
+            alert("Payment Verification Failed. Please contact elite support.");
             socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
           }
         },
         modal: {
           ondismiss: function() {
+            console.log("⚠️ PAYMENT DISMISSED: Releasing vehicle lock...");
             socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
             setPaymentLoadingId(null);
           }
@@ -263,8 +270,9 @@ const Fleet = () => {
       setPaymentLoadingId(null);
 
     } catch (error) {
-      console.error(error);
-      alert('Order Setup Failed.');
+      console.error("❌ ORDER SETUP FAILURE: ", error);
+      const errorMsg = error.response?.data?.message || 'The server rejected the payment request. Please check your credentials or try again later.';
+      alert(`⚠️ ORDER SETUP FAILED: ${errorMsg}`);
       setPaymentLoadingId(null);
       socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
     }

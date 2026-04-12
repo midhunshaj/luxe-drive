@@ -61,8 +61,8 @@ const updateCar = async (req, res) => {
     // Safety: Ensure providers can't hijack other providers' vehicles or change dealerName
     if (req.user.role === 'provider') {
       const carToUpdate = await Car.findById(req.params.id);
-      if (!carToUpdate || carToUpdate.providerId.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: 'Not authorized to update this vehicle' });
+      if (!carToUpdate || !carToUpdate.providerId || carToUpdate.providerId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: 'Not authorized to update this vehicle or legacy data' });
       }
       updateData.dealerName = req.user.companyName;
     }
