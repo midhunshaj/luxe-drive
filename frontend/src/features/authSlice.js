@@ -50,6 +50,10 @@ export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    setCredentials: (state, action) => {
+      state.user = action.payload;
+      localStorage.setItem('userInfo', JSON.stringify(action.payload));
+    },
     reset: (state) => {
       state.isError = false;
       state.isSuccess = false;
@@ -92,5 +96,5 @@ export const authSlice = createSlice({
   },
 });
 
-export const { reset } = authSlice.actions;
+export const { reset, setCredentials } = authSlice.actions;
 export default authSlice.reducer;

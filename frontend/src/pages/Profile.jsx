@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import { setCredentials } from '../features/authSlice';
 
 const Profile = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   
   const [profileData, setProfileData] = useState({
@@ -61,10 +63,12 @@ const Profile = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
       const { data } = await axios.put('/api/users/profile', profileData, config);
-      setMessage('Profile updated successfully!');
-      // Assuming you might update redux state here in a real app
+      dispatch(setCredentials(data));
+      setMessage('Profile updated successfully! ✅');
+      setTimeout(() => setMessage(''), 5000);
     } catch (error) {
-      setMessage('Update failed. Try again.');
+      const errMsg = error.response?.data?.message || 'Update failed. Try again.';
+      setMessage(errMsg);
     }
   };
 
