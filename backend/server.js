@@ -62,24 +62,32 @@ io.on('connection', (socket) => {
 
   socket.on('lockCar', ({ carId, userId }) => {
     if (!activeLocks[carId]) activeLocks[carId] = [];
-    if (!activeLocks[carId].includes(userId)) {
-      activeLocks[carId].push(userId);
+    // Use an object to track both socket.id and optional userId
+    const lockExists = activeLocks[carId].find(l => l.socketId === socket.id);
+    if (!lockExists) {
+      activeLocks[carId].push({ socketId: socket.id, userId });
     }
-    io.emit('carLocked', { carId, userIds: activeLocks[carId] });
-    console.log(`🔒 Car LOCKED: ${carId} (Active users: ${activeLocks[carId].length})`);
+    io.emit('carLocked', { carId, locks: activeLocks[carId] });
+    console.log(`🔒 Car LOCKED: ${carId} (Total locks: ${activeLocks[carId].length})`);
   });
 
-  socket.on('unlockCar', ({ carId, userId }) => {
+  socket.on('unlockCar', ({ carId }) => {
     if (activeLocks[carId]) {
-      activeLocks[carId] = activeLocks[carId].filter(id => id !== userId);
+      activeLocks[carId] = activeLocks[carId].filter(l => l.socketId !== socket.id);
       if (activeLocks[carId].length === 0) delete activeLocks[carId];
     }
-    io.emit('carUnlocked', { carId, userIds: activeLocks[carId] || [] });
+    io.emit('carUnlocked', { carId, locks: activeLocks[carId] || [] });
     console.log(`🔓 Car UNLOCKED: ${carId}`);
   });
 
   socket.on('disconnect', () => {
-    console.log('📡 User disconnected');
+    // Clean up all locks held by this socket on disconnect
+    Object.keys(activeLocks).forEach(carId => {
+      activeLocks[carId] = activeLocks[carId].filter(l => l.socketId !== socket.id);
+      if (activeLocks[carId].length === 0) delete activeLocks[carId];
+      io.emit('carUnlocked', { carId, locks: activeLocks[carId] || [] });
+    });
+    console.log('📡 User disconnected and locks cleared');
   });
 });
 

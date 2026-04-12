@@ -36,11 +36,11 @@ const Fleet = () => {
     setSocket(newSocket);
 
     newSocket.on('initialLocks', (locks) => setLockedCars(locks));
-    newSocket.on('carLocked', ({ carId, userIds }) => {
-      setLockedCars(prev => ({ ...prev, [carId]: userIds }));
+    newSocket.on('carLocked', ({ carId, locks }) => {
+      setLockedCars(prev => ({ ...prev, [carId]: locks }));
     });
-    newSocket.on('carUnlocked', ({ carId, userIds }) => {
-      setLockedCars(prev => ({ ...prev, [carId]: userIds }));
+    newSocket.on('carUnlocked', ({ carId, locks }) => {
+      setLockedCars(prev => ({ ...prev, [carId]: locks }));
     });
     newSocket.on('inventoryUpdate', () => {
       dispatch(getCars());
@@ -76,7 +76,8 @@ const Fleet = () => {
     }
     
     // Check if the car is FULLY occupied by other users
-    const currentOccupancy = (lockedCars[car._id] || []).filter(id => id !== user._id).length;
+    // Check if the car is FULLY occupied by other sessions
+    const currentOccupancy = (lockedCars[car._id] || []).filter(lock => lock.socketId !== socket?.id).length;
     if (currentOccupancy >= car.countInStock) {
       alert("All available units of this vehicle are currently being reserved by other clients. Please wait 60 seconds.");
       return;
@@ -190,8 +191,8 @@ const Fleet = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {cars.map((car, index) => {
-              // A car is ONLY considered "Locked" if all physical units are being occupied
-              const activeUserLocks = (lockedCars[car._id] || []).filter(id => id !== user?._id);
+              // A car is ONLY considered "Locked" if all physical units are being occupied by other sessions
+              const activeUserLocks = (lockedCars[car._id] || []).filter(lock => lock.socketId !== socket?.id);
               const isLocked = activeUserLocks.length >= car.countInStock;
               
               return (
