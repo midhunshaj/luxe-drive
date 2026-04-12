@@ -94,6 +94,22 @@ const verifyPayment = async (req, res) => {
       dealerStatus: 'pending'
     });
 
+    // 🚀 INVENTORY SYNC: Decrement the car's available stock counts
+    const carToUpdate = await Car.findById(carId);
+    if (carToUpdate) {
+      carToUpdate.countInStock = Math.max(0, carToUpdate.countInStock - 1);
+      await carToUpdate.save();
+
+      // 📡 WEBSOCKET BROADCAST: Inform ALL connected browsers that stock has changed!
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('inventoryUpdate', { 
+          carId: carToUpdate._id, 
+          newCount: carToUpdate.countInStock 
+        });
+      }
+    }
+
     console.log("✅ Booking confirmed and saved:", booking._id);
     res.status(200).json({ message: "Payment verified successfully", success: true, bookingId: booking._id });
 

@@ -38,6 +38,9 @@ const Fleet = () => {
     newSocket.on('carUnlocked', ({ carId, userIds }) => {
       setLockedCars(prev => ({ ...prev, [carId]: userIds }));
     });
+    newSocket.on('inventoryUpdate', () => {
+      dispatch(getCars());
+    });
 
     return () => newSocket.disconnect();
   }, [dispatch]);

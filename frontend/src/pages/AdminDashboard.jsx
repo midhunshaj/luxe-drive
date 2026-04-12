@@ -4,6 +4,7 @@ import { createCar, reset, getCars } from '../features/carSlice';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import io from 'socket.io-client';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('deploy'); // 'deploy' | 'bookings' | 'fleet'
@@ -81,6 +82,14 @@ const AdminDashboard = () => {
     if (activeTab === 'fleet' && user && ['admin', 'provider'].includes(user.role)) {
       dispatch(getCars());
     }
+
+    // --- REAL-TIME INVENTORY SYNC ---
+    const socket = io(window.location.origin.replace('5173', '5000'));
+    socket.on('inventoryUpdate', () => {
+      if (activeTab === 'fleet') dispatch(getCars());
+    });
+
+    return () => socket.disconnect();
   }, [activeTab, user, dispatch]);
 
   const updateDealerStatus = async (bookingId, status) => {
