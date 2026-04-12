@@ -16,8 +16,18 @@ const AdminDashboard = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   const [formData, setFormData] = useState({
-    make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, dealerName: 'LuxeDrive Premium', imageUrl: '', longitude: '77.2090', latitude: '28.6139'
+    make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, 
+    dealerName: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139'
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        dealerName: user.role === 'provider' ? user.companyName : 'LuxeDrive Premium'
+      }));
+    }
+  }, [user]);
 
   const { make, model, year, category, pricePerDay, countInStock, dealerName, imageUrl, longitude, latitude } = formData;
   
@@ -165,7 +175,11 @@ const AdminDashboard = () => {
         setSuccessMsg("Vehicle updated successfully! ✅");
         setTimeout(() => setSuccessMsg(''), 4000);
         setEditCarId(null);
-        setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, dealerName: 'LuxeDrive Premium', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
+        setFormData({ 
+          make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, 
+          dealerName: user?.role === 'provider' ? user.companyName : 'LuxeDrive Premium', 
+          imageUrl: '', longitude: '77.2090', latitude: '28.6139' 
+        });
         dispatch(getCars());
         setActiveTab('fleet');
       } catch(err) {
@@ -177,7 +191,11 @@ const AdminDashboard = () => {
         .then(() => {
           setSuccessMsg("Vehicle Successfully Deployed to Global Fleet! ✅");
           setTimeout(() => setSuccessMsg(''), 4000);
-          setFormData({ make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, dealerName: 'LuxeDrive Premium', imageUrl: '', longitude: '77.2090', latitude: '28.6139' });
+          setFormData({ 
+            make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, 
+            dealerName: user?.role === 'provider' ? user.companyName : 'LuxeDrive Premium', 
+            imageUrl: '', longitude: '77.2090', latitude: '28.6139' 
+          });
         })
         .catch((err) => {
           alert(`Upload Failed: ${err}`);

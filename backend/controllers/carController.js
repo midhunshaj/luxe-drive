@@ -35,8 +35,15 @@ const createCar = async (req, res) => {
   try {
     // The request body should match our Car Schema 
     // (make, model, year, pricePerDay, availabilityStatus, location, images)
-    const car = new Car({ ...req.body });
+    const carData = { ...req.body };
+    
+    // Safety: Link car to provider if role is provider
+    if (req.user.role === 'provider') {
+      carData.providerId = req.user._id;
+      carData.dealerName = req.user.companyName; // Enforce provider's company name
+    }
 
+    const car = new Car(carData);
     const createdCar = await car.save();
     res.status(201).json(createdCar);
   } catch (error) {
@@ -49,8 +56,18 @@ const createCar = async (req, res) => {
 // @access  Private/Admin Only
 const updateCar = async (req, res) => {
   try {
-    // findByIdAndUpdate merges the new body data while keeping the rest intact
-    const car = await Car.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updateData = { ...req.body };
+
+    // Safety: Ensure providers can't hijack other providers' vehicles or change dealerName
+    if (req.user.role === 'provider') {
+      const carToUpdate = await Car.findById(req.params.id);
+      if (!carToUpdate || carToUpdate.providerId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: 'Not authorized to update this vehicle' });
+      }
+      updateData.dealerName = req.user.companyName;
+    }
+
+    const car = await Car.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (car) {
       res.json(car);
     } else {
@@ -66,12 +83,19 @@ const updateCar = async (req, res) => {
 // @access  Private/Admin Only
 const deleteCar = async (req, res) => {
   try {
-    const car = await Car.findByIdAndDelete(req.params.id);
-    if (car) {
-      res.json({ message: 'Vehicle officially removed from fleet inventory' });
-    } else {
-      res.status(404).json({ message: 'Car not found' });
+    const carToRemove = await Car.findById(req.params.id);
+    
+    if (!carToRemove) {
+      return res.status(404).json({ message: 'Car not found' });
     }
+
+    // Security check: Admins can delete anything, providers only their own
+    if (req.user.role === 'provider' && carToRemove.providerId?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this vehicle' });
+    }
+
+    await Car.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Vehicle officially removed from fleet inventory' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
