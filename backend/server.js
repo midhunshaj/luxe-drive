@@ -60,15 +60,32 @@ io.on('connection', (socket) => {
     socket.emit('initialLocks', activeLocks);
   });
 
-  socket.on('lockCar', ({ carId, userId }) => {
-    if (!activeLocks[carId]) activeLocks[carId] = [];
-    // Use an object to track both socket.id and optional userId
-    const lockExists = activeLocks[carId].find(l => l.socketId === socket.id);
-    if (!lockExists) {
-      activeLocks[carId].push({ socketId: socket.id, userId });
+  socket.on('lockCar', async ({ carId, userId }) => {
+    try {
+      const Car = require('./models/Car'); 
+      const car = await Car.findById(carId);
+      if (!car) return;
+
+      if (!activeLocks[carId]) activeLocks[carId] = [];
+      
+      // RACING PREVENTION: Check if there is space for another lock right now
+      // This is the "Judge" that decides if you get to open the booking modal
+      const currentOccupancy = activeLocks[carId].filter(l => l.socketId !== socket.id).length;
+      if (currentOccupancy >= car.countInStock) {
+         socket.emit('lockRejected', { carId, reason: 'This vehicle was just reserved by someone else.' });
+         return;
+      }
+
+      const lockExists = activeLocks[carId].find(l => l.socketId === socket.id);
+      if (!lockExists) {
+        activeLocks[carId].push({ socketId: socket.id, userId });
+      }
+      io.emit('carLocked', { carId, locks: activeLocks[carId] });
+      socket.emit('lockGranted', { carId }); 
+      console.log(`🔒 Car LOCK GRANTED: ${carId} (Occupancy: ${activeLocks[carId].length}/${car.countInStock})`);
+    } catch (err) {
+      console.error("Locking logic failed:", err);
     }
-    io.emit('carLocked', { carId, locks: activeLocks[carId] });
-    console.log(`🔒 Car LOCKED: ${carId} (Total locks: ${activeLocks[carId].length})`);
   });
 
   socket.on('unlockCar', ({ carId }) => {

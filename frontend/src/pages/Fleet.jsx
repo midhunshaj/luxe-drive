@@ -24,6 +24,10 @@ const Fleet = () => {
   const [lockedCars, setLockedCars] = useState({}); 
   const [socket, setSocket] = useState(null);
   const [myId, setMyId] = useState(null);
+  const [pendingLockId, setPendingLockId] = useState(null); 
+  
+  // Create a ref for cars to use inside socket listeners without stale closures
+  const carsRef = { current: cars };
 
   useEffect(() => {
     dispatch(getCars());
@@ -52,8 +56,31 @@ const Fleet = () => {
       dispatch(getCars());
     });
 
+    newSocket.on('lockGranted', ({ carId }) => {
+      setPendingLockId(prev => {
+        if (prev === carId) {
+          const car = carsRef.current.find(c => c._id === carId);
+          if (car) {
+            setSelectedCar(car);
+            setBookingData({ deliveryLocation: '', licenseNo: '', phoneNo: user?.phone || '' });
+            setShowModal(true);
+          }
+        }
+        return null;
+      });
+    });
+
+    newSocket.on('lockRejected', ({ carId, reason }) => {
+      setPendingLockId(prev => {
+        if (prev === carId) {
+          alert(reason);
+        }
+        return null;
+      });
+    });
+
     return () => newSocket.disconnect();
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   const detectMyLocation = () => {
     if (navigator.geolocation) {
@@ -90,11 +117,8 @@ const Fleet = () => {
       return;
     }
 
-    setSelectedCar(car);
-    setBookingData({ deliveryLocation: '', licenseNo: '', phoneNo: user.phone || '' });
-    setShowModal(true);
-    
-    // BROADCAST: This user is taking one unit spot
+    // BROADCAST: Request Server Authority to lock this unit
+    setPendingLockId(car._id);
     socket.emit('lockCar', { carId: car._id, userId: user._id });
   };
 
@@ -245,14 +269,14 @@ const Fleet = () => {
 
                     <button
                       onClick={() => handleBookingClick(car)}
-                      disabled={isLocked || paymentLoadingId === car._id || (car.countInStock <= 0)}
+                      disabled={isLocked || paymentLoadingId === car._id || (car.countInStock <= 0) || pendingLockId === car._id}
                       className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest transition-all duration-300 ${
-                        (isLocked || car.countInStock <= 0)
+                        (isLocked || car.countInStock <= 0 || pendingLockId === car._id)
                           ? 'bg-gray-800 text-gray-600 cursor-not-allowed border-gray-700 scale-95'
                           : 'bg-white text-black hover:bg-luxe-gold hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]'
                       }`}
                     >
-                      {paymentLoadingId === car._id ? 'Processing...' : (car.countInStock <= 0 ? 'Out of Stock' : (isLocked ? 'Currently Busy' : 'Book Now'))}
+                      {pendingLockId === car._id ? 'Securing Spot...' : (paymentLoadingId === car._id ? 'Processing...' : (car.countInStock <= 0 ? 'Out of Stock' : (isLocked ? 'Currently Busy' : 'Book Now')))}
                     </button>
                   </div>
                 </motion.div>
