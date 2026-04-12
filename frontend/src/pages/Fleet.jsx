@@ -213,6 +213,7 @@ const Fleet = () => {
 
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
       console.log("💳 TOKEN TRACE: Sending token starting with: ", user.token?.substring(0, 15) + "...");
+      console.log("💳 TARGET URL: ", window.location.origin + '/api/bookings/checkout');
       console.log("💳 HITTING BACKEND: Requesting Order ID for: ", selectedCar.model);
       
       const { data: order } = await axios.post('/api/bookings/checkout', {

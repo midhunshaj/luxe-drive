@@ -65,8 +65,14 @@ export const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      state.user = action.payload;
-      localStorage.setItem('userInfo', JSON.stringify(action.payload));
+      // Merge logic: If the new payload is missing a token, preserve the old one
+      const updatedUser = { 
+        ...state.user, 
+        ...action.payload,
+        token: action.payload.token || state.user?.token 
+      };
+      state.user = updatedUser;
+      localStorage.setItem('userInfo', JSON.stringify(updatedUser));
     },
     reset: (state) => {
       state.isError = false;

@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
@@ -9,6 +11,18 @@ import MyBookings from './pages/MyBookings';
 import Profile from './pages/Profile';
 
 function App() {
+  const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // 🛡️ SESSION GUARD: If user exists but token is corrupted/missing, force a hard reset
+    if (user && !user.token) {
+      console.warn("🛡️ SESSION GUARD: Corrupted session detected (No Token). Force-cleaning local storage.");
+      localStorage.removeItem('userInfo');
+      window.location.reload(); 
+    }
+  }, [user]);
+
   return (
     <Router>
       <div className="min-h-screen font-sans selection:bg-luxe-gold selection:text-black">
