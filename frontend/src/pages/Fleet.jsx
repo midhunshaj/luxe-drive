@@ -279,6 +279,34 @@ const Fleet = () => {
           </h2>
           <p className="text-gray-400 text-lg uppercase tracking-widest">Hand-selected luxury for global citizens</p>
         </motion.div>
+        
+        {/* --- GLOBAL KYC WARNING BANNER --- */}
+        {user && user.role !== 'admin' && !(
+          user.kycDetails?.licenseFront?.length > 5 && 
+          user.kycDetails?.licenseBack?.length > 5 && 
+          user.kycDetails?.idProofFront?.length > 5 && 
+          user.kycDetails?.idProofBack?.length > 5
+        ) && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-12 bg-red-900/20 border border-red-500/50 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between backdrop-blur-md"
+          >
+            <div className="flex items-center mb-4 md:mb-0">
+               <span className="text-3xl mr-4">⚠️</span>
+               <div>
+                  <h4 className="text-lg font-bold uppercase tracking-widest text-white">Action Required: KYC Documentation</h4>
+                  <p className="text-gray-400 text-sm">You must upload your Driving License and ID Proof to reserve any elite vehicle.</p>
+               </div>
+            </div>
+            <button 
+              onClick={() => navigate('/profile')} 
+              className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-8 rounded-xl uppercase tracking-widest text-xs transition-all shadow-lg"
+            >
+              Upload Documents Now
+            </button>
+          </motion.div>
+        )}
 
         {isLoading ? (
           <div className="text-center py-20 text-luxe-gold text-xl animate-pulse tracking-widest uppercase">Initializing Fleet Inventory...</div>
