@@ -1,8 +1,16 @@
 const { OAuth2Client } = require('google-auth-library');
 const crypto = require('crypto');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+
+// Helper to get Google Client securely
+const getGoogleClient = () => {
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    console.error("CRITICAL: GOOGLE_CLIENT_ID missing in backend .env");
+    return null;
+  }
+  return new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+};
 
 // @desc    Register a new user
 // @route   POST /api/users/register
@@ -252,6 +260,12 @@ const updateKycStatus = async (req, res) => {
 // @access  Public
 const googleLogin = async (req, res) => {
   const { idToken } = req.body;
+  const client = getGoogleClient();
+  
+  if (!client) {
+    return res.status(500).json({ message: 'Google Auth is not configured on the server. Please add GOOGLE_CLIENT_ID to .env' });
+  }
+
   try {
     const ticket = await client.verifyIdToken({
       idToken,
