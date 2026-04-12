@@ -124,9 +124,28 @@ const Fleet = () => {
       return;
     }
 
+    // --- CONNECTION HEALTH CHECK ---
+    if (!socket || !socket.connected) {
+      alert("Live sync interrupted. Reconnecting LuxeDrive Engine...");
+      window.location.reload();
+      return;
+    }
+
     // BROADCAST: Request Server Authority to lock this unit
     setPendingLockId(car._id);
     socket.emit('lockCar', { carId: car._id, userId: user._id });
+
+    // --- SAFETY TIMEOUT (Phone Stability) ---
+    // If server lost signal, force unlock UI after 10 seconds
+    setTimeout(() => {
+      setPendingLockId(prev => {
+        if (prev === car._id) {
+          console.warn("Safety Trigger: Lock auth signal lost. Clearing UI state.");
+          return null;
+        }
+        return prev;
+      });
+    }, 10000);
   };
 
   const closeModal = () => {

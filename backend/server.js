@@ -12,6 +12,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Connect to MongoDB
 connectDB();
+const Car = require('./models/Car'); // Require models at top level for stability
 
 const app = express();
 const server = http.createServer(app);
@@ -62,14 +63,15 @@ io.on('connection', (socket) => {
 
   socket.on('lockCar', async ({ carId, userId }) => {
     try {
-      const Car = require('./models/Car'); 
       const car = await Car.findById(carId);
-      if (!car) return;
+      if (!car) {
+        socket.emit('lockRejected', { carId, reason: 'Vehicle data not found.' });
+        return;
+      }
 
       if (!activeLocks[carId]) activeLocks[carId] = [];
       
       // RACING PREVENTION: Check if there is space for another lock right now
-      // This is the "Judge" that decides if you get to open the booking modal
       const currentOccupancy = activeLocks[carId].filter(l => l.socketId !== socket.id).length;
       if (currentOccupancy >= car.countInStock) {
          socket.emit('lockRejected', { carId, reason: 'This vehicle was just reserved by someone else.' });
@@ -85,6 +87,7 @@ io.on('connection', (socket) => {
       console.log(`🔒 Car LOCK GRANTED: ${carId} (Occupancy: ${activeLocks[carId].length}/${car.countInStock})`);
     } catch (err) {
       console.error("Locking logic failed:", err);
+      socket.emit('lockRejected', { carId, reason: 'Internal Server Error while locking.' });
     }
   });
 
