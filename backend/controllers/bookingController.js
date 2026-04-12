@@ -212,4 +212,29 @@ const updateBookingStatus = async (req, res) => {
   }
 };
 
-module.exports = { createCheckoutSession, verifyPayment, getMyBookings, getAllBookings, updateBookingStatus };
+// @desc    Create a Donation Order (29 INR)
+// @route   POST /api/bookings/donate
+// @access  Public
+const createDonationOrder = async (req, res) => {
+  try {
+    const options = {
+      amount: 2900, // 29.00 INR in paise
+      currency: "INR",
+      receipt: `don_${Date.now()}`,
+      notes: { type: 'donation' }
+    };
+    const order = await razorpay.orders.create(options);
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  createCheckoutSession,
+  verifyPayment,
+  getMyBookings,
+  getAllBookings,
+  updateBookingStatus,
+  createDonationOrder
+};
