@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist, getProviders, updateProviderStatus } = require('../controllers/authController');
+const { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist, getProviders, updateProviderStatus, getKycRequests, updateKycStatus: updateKycStatusCtrl } = require('../controllers/authController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 router.post('/register', registerUser);
@@ -9,5 +9,7 @@ router.route('/profile').get(protect, getUserProfile).put(protect, updateUserPro
 router.route('/wishlist').post(protect, toggleWishlist);
 router.route('/providers').get(protect, admin, getProviders);
 router.route('/providers/:id/status').put(protect, admin, updateProviderStatus);
+router.get('/kyc-requests', protect, admin, getKycRequests);
+router.put('/:id/kyc-status', protect, admin, updateKycStatusCtrl);
 
 module.exports = router;

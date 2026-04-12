@@ -107,6 +107,13 @@ const Fleet = () => {
       navigate('/login');
       return;
     }
+
+    // --- SECURE KYC GATE ---
+    if (user.role === 'user' && user.kycStatus !== 'approved') {
+      alert("Verification Required: To maintain the highest security standards, please complete your KYC (Identity & License) in the Profile section before booking.");
+      navigate('/profile');
+      return;
+    }
     
     // Check if the car is FULLY occupied by other users
     // Check if the car is FULLY occupied by other sessions

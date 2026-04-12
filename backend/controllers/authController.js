@@ -28,6 +28,11 @@ const registerUser = async (req, res) => {
         role: user.role,
         companyName: user.companyName,
         providerStatus: user.providerStatus,
+        kycStatus: user.kycStatus,
+        kycDetails: user.kycDetails,
+        phone: user.phone,
+        address: user.address,
+        wishlist: user.wishlist,
         token: generateToken(user._id),
       });
     } else {
@@ -55,6 +60,11 @@ const authUser = async (req, res) => {
         role: user.role,
         companyName: user.companyName,
         providerStatus: user.providerStatus,
+        kycStatus: user.kycStatus,
+        kycDetails: user.kycDetails,
+        phone: user.phone,
+        address: user.address,
+        wishlist: user.wishlist,
         token: generateToken(user._id),
       });
     } else {
@@ -78,6 +88,13 @@ const getUserProfile = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        kycStatus: user.kycStatus,
+        kycDetails: user.kycDetails,
+        phone: user.phone,
+        address: user.address,
+        providerStatus: user.providerStatus,
+        companyName: user.companyName,
+        wishlist: user.wishlist,
       });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -99,7 +116,21 @@ const updateUserProfile = async (req, res) => {
       user.email = req.body.email || user.email;
       user.phone = req.body.phone || user.phone;
       user.address = req.body.address || user.address;
-      user.driverLicenseUrl = req.body.driverLicenseUrl || user.driverLicenseUrl;
+      
+      // Update KYC Details
+      user.kycDetails = {
+        licenseFront: req.body.licenseFront || user.kycDetails?.licenseFront,
+        licenseBack: req.body.licenseBack || user.kycDetails?.licenseBack,
+        idProofFront: req.body.idProofFront || user.kycDetails?.idProofFront,
+        idProofBack: req.body.idProofBack || user.kycDetails?.idProofBack
+      };
+
+      // Auto-transition status if docs are complete
+      if (user.kycDetails.licenseFront && user.kycDetails.licenseBack && 
+          user.kycDetails.idProofFront && user.kycDetails.idProofBack && 
+          user.kycStatus === 'pending') {
+        user.kycStatus = 'submitted';
+      }
 
       if (req.body.password) {
         user.password = req.body.password;
@@ -113,7 +144,11 @@ const updateUserProfile = async (req, res) => {
         email: updatedUser.email,
         phone: updatedUser.phone,
         address: updatedUser.address,
-        driverLicenseUrl: updatedUser.driverLicenseUrl,
+        kycStatus: updatedUser.kycStatus,
+        kycDetails: updatedUser.kycDetails,
+        role: updatedUser.role,
+        providerStatus: updatedUser.providerStatus,
+        companyName: updatedUser.companyName,
         wishlist: updatedUser.wishlist,
         token: generateToken(updatedUser._id),
       });
@@ -176,4 +211,34 @@ const updateProviderStatus = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist, getProviders, updateProviderStatus };
+// @desc    Get all KYC requests
+// @route   GET /api/users/kyc-requests
+// @access  Private/Admin
+const getKycRequests = async (req, res) => {
+  try {
+    const users = await User.find({ kycStatus: { $ne: 'pending' } }).select('-password');
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update User KYC Status
+// @route   PUT /api/users/:id/kyc-status
+// @access  Private/Admin
+const updateKycStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (user) {
+      user.kycStatus = req.body.status || user.kycStatus;
+      await user.save();
+      res.json({ message: 'KYC status updated' });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist, getProviders, updateProviderStatus, getKycRequests, updateKycStatus };

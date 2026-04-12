@@ -15,6 +15,8 @@ const AdminDashboard = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editCarId, setEditCarId] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
+  const [kycRequests, setKycRequests] = useState([]);
+  const [loadingKyc, setLoadingKyc] = useState(false);
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -79,6 +81,20 @@ const AdminDashboard = () => {
       };
       fetchProviders();
     }
+    if (activeTab === 'kyc' && user && user.role === 'admin') {
+      const fetchKyc = async () => {
+        setLoadingKyc(true);
+        try {
+          const config = { headers: { Authorization: `Bearer ${user.token}` } };
+          const { data } = await axios.get('/api/users/kyc-requests', config);
+          setKycRequests(data);
+        } catch (error) {
+          console.error("Failed to load KYC requests", error);
+        }
+        setLoadingKyc(false);
+      };
+      fetchKyc();
+    }
     if (activeTab === 'fleet' && user && ['admin', 'provider'].includes(user.role)) {
       dispatch(getCars());
     }
@@ -120,6 +136,19 @@ const AdminDashboard = () => {
       console.error(error);
       const backendError = error.response?.data?.message || error.message || "Unknown error";
       alert(`Failed to update provider status: ${backendError}`);
+    }
+  };
+
+  const updateKycStatus = async (userId, status) => {
+    try {
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      await axios.put(`/api/users/${userId}/kyc-status`, { status }, config);
+      setKycRequests(prev => prev.map(u => u._id === userId ? { ...u, kycStatus: status } : u));
+      setSuccessMsg(`User KYC ${status === 'approved' ? 'Approved' : 'Rejected'} successfully! ✅`);
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update KYC status");
     }
   };
 
@@ -239,12 +268,20 @@ const AdminDashboard = () => {
             Global Bookings
           </button>
           {user?.role === 'admin' && (
-            <button 
-              onClick={() => setActiveTab('providers')}
-              className={`px-8 py-3 rounded text-sm tracking-widest uppercase font-bold transition-all ${activeTab === 'providers' ? 'bg-luxe-gold text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-            >
-              Providers
-            </button>
+            <>
+              <button 
+                onClick={() => setActiveTab('providers')}
+                className={`px-8 py-3 rounded text-sm tracking-widest uppercase font-bold transition-all ${activeTab === 'providers' ? 'bg-luxe-gold text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+              >
+                Providers
+              </button>
+              <button 
+                onClick={() => setActiveTab('kyc')}
+                className={`px-8 py-3 rounded text-sm tracking-widest uppercase font-bold transition-all ${activeTab === 'kyc' ? 'bg-luxe-gold text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+              >
+                Verify KYC
+              </button>
+            </>
           )}
         </div>
 
@@ -446,6 +483,82 @@ const AdminDashboard = () => {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            )}
+          </motion.div>
+        ) : activeTab === 'kyc' ? (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-gray-900 border border-gray-800 p-8 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-x-auto">
+             <h2 className="text-3xl font-bold uppercase tracking-widest mb-8 border-b border-gray-800 pb-4">
+              <span className="text-luxe-gold">KYC</span> Verification Queue
+            </h2>
+            
+            {loadingKyc ? (
+              <div className="text-center text-luxe-gold mb-8 text-xl font-bold animate-pulse">Verifying Security Documents...</div>
+            ) : kycRequests.length === 0 ? (
+              <div className="text-center text-gray-500 mt-10 text-lg uppercase tracking-widest font-bold">No Pending KYC Submissions found.</div>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-800 text-gray-500 uppercase text-[10px] tracking-widest font-black">
+                    <th className="py-4 px-4">User Details</th>
+                    <th className="py-4 px-4 text-center">Driver License</th>
+                    <th className="py-4 px-4 text-center">ID Proof</th>
+                    <th className="py-4 px-4 text-center">Status</th>
+                    <th className="py-4 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                   {kycRequests.map((req) => (
+                      <tr key={req._id} className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
+                        <td className="py-6 px-4">
+                           <div className="font-bold text-lg">{req.name}</div>
+                           <div className="text-gray-500 text-xs">{req.email}</div>
+                           <div className="text-luxe-gold text-[10px] font-black mt-1 uppercase tracking-tighter">PH: {req.phone || 'N/A'}</div>
+                        </td>
+                        <td className="py-6 px-4">
+                           <div className="flex gap-2 justify-center">
+                              {req.kycDetails?.licenseFront && (
+                                <a href={req.kycDetails.licenseFront} target="_blank" rel="noreferrer" className="w-16 h-10 border border-gray-700 rounded overflow-hidden hover:border-luxe-gold transition">
+                                  <img src={req.kycDetails.licenseFront} className="w-full h-full object-cover" />
+                                </a>
+                              )}
+                              {req.kycDetails?.licenseBack && (
+                                <a href={req.kycDetails.licenseBack} target="_blank" rel="noreferrer" className="w-16 h-10 border border-gray-700 rounded overflow-hidden hover:border-luxe-gold transition">
+                                  <img src={req.kycDetails.licenseBack} className="w-full h-full object-cover" />
+                                </a>
+                              )}
+                              {!req.kycDetails?.licenseFront && <span className="text-[10px] text-red-500 font-bold italic">MISSING</span>}
+                           </div>
+                        </td>
+                        <td className="py-6 px-4">
+                           <div className="flex gap-2 justify-center">
+                              {req.kycDetails?.idProofFront && (
+                                <a href={req.kycDetails.idProofFront} target="_blank" rel="noreferrer" className="w-16 h-10 border border-gray-700 rounded overflow-hidden hover:border-luxe-gold transition">
+                                  <img src={req.kycDetails.idProofFront} className="w-full h-full object-cover" />
+                                </a>
+                              )}
+                              {req.kycDetails?.idProofBack && (
+                                <a href={req.kycDetails.idProofBack} target="_blank" rel="noreferrer" className="w-16 h-10 border border-gray-700 rounded overflow-hidden hover:border-luxe-gold transition">
+                                  <img src={req.kycDetails.idProofBack} className="w-full h-full object-cover" />
+                                </a>
+                              )}
+                              {!req.kycDetails?.idProofFront && <span className="text-[10px] text-red-500 font-bold italic">MISSING</span>}
+                           </div>
+                        </td>
+                        <td className="py-6 px-4 text-center">
+                           <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${req.kycStatus === 'approved' ? 'bg-green-900 text-green-300' : 'bg-yellow-900 text-yellow-300'}`}>
+                             {req.kycStatus}
+                           </span>
+                        </td>
+                        <td className="py-6 px-4 text-right">
+                           <div className="flex gap-2 justify-end">
+                              <button onClick={() => updateKycStatus(req._id, 'approved')} className="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-green-500">Approve</button>
+                              <button onClick={() => updateKycStatus(req._id, 'rejected')} className="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-red-500">Reject</button>
+                           </div>
+                        </td>
+                      </tr>
+                   ))}
                 </tbody>
               </table>
             )}

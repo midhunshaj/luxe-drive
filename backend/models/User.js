@@ -11,7 +11,13 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   phone: { type: String },
   address: { type: String },
-  driverLicenseUrl: { type: String },
+  kycStatus: { type: String, enum: ['pending', 'submitted', 'approved', 'rejected'], default: 'pending' },
+  kycDetails: {
+    licenseFront: { type: String },
+    licenseBack: { type: String },
+    idProofFront: { type: String },
+    idProofBack: { type: String }
+  },
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Car' }]
 }, {
   timestamps: true // Automatically creates createdAt and updatedAt fields
