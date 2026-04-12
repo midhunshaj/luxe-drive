@@ -28,9 +28,11 @@ const Fleet = () => {
     dispatch(getCars());
     
     // --- Initialize Real-time Conflict Prevention ---
-    // --- Initialize Real-time Conflict Prevention ---
-    const socketUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin;
-    const newSocket = io(socketUrl);
+    // Using relative connection to work flawlessly behind Nginx over HTTPS/WSS
+    const newSocket = io({
+      path: '/socket.io/',
+      transports: ['websocket', 'polling']
+    });
     setSocket(newSocket);
 
     newSocket.on('initialLocks', (locks) => setLockedCars(locks));

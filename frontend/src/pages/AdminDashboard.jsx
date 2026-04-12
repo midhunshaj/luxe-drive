@@ -84,8 +84,10 @@ const AdminDashboard = () => {
     }
 
     // --- REAL-TIME INVENTORY SYNC ---
-    const socketUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin;
-    const socket = io(socketUrl);
+    const socket = io({
+      path: '/socket.io/',
+      transports: ['websocket', 'polling']
+    });
     socket.on('inventoryUpdate', () => {
       if (activeTab === 'fleet') dispatch(getCars());
     });
