@@ -7,11 +7,25 @@ import axios from 'axios';
 import io from 'socket.io-client';
 import GoogleAd from '../components/GoogleAd';
 
+import { setCredentials } from '../features/authSlice';
+
 const Fleet = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { cars, isLoading } = useSelector((state) => state.cars);
   const { user } = useSelector((state) => state.auth);
+
+  // Sync profile data on mount to ensure KYC is fresh
+  useEffect(() => {
+    if (user && user.token) {
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      axios.get('/api/users/profile', config)
+        .then(({ data }) => {
+          dispatch(setCredentials(data));
+        })
+        .catch(err => console.error("Profile sync failed", err));
+    }
+  }, [dispatch, user?.token]);
 
   const [selectedCar, setSelectedCar] = useState(null);
   const [showModal, setShowModal] = useState(false);
