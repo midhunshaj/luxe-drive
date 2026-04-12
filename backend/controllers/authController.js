@@ -1,3 +1,6 @@
+const { OAuth2Client } = require('google-auth-library');
+const crypto = require('crypto');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 
@@ -244,4 +247,39 @@ const updateKycStatus = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist, getProviders, updateProviderStatus, getKycRequests, updateKycStatus };
+// @desc    Auth with Google
+// @route   POST /api/users/google
+// @access  Public
+const googleLogin = async (req, res) => {
+  const { idToken } = req.body;
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const { email, name, picture } = ticket.getPayload();
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+        password: crypto.randomBytes(16).toString('hex'), // Random password for social logins
+        role: 'user',
+      });
+    }
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid Google Token' });
+  }
+};
+
+module.exports = { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist, getProviders, updateProviderStatus, getKycRequests, updateKycStatus, googleLogin };

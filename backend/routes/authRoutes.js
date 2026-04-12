@@ -11,5 +11,6 @@ router.route('/providers').get(protect, admin, getProviders);
 router.route('/providers/:id/status').put(protect, admin, updateProviderStatus);
 router.get('/kyc-requests', protect, admin, getKycRequests);
 router.put('/:id/kyc-status', protect, admin, updateKycStatusCtrl);
+router.post('/google', googleLogin);
 
 module.exports = router;
