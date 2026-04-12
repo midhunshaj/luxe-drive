@@ -108,15 +108,16 @@ const Fleet = () => {
       return;
     }
 
-    // --- SECURE KYC GATE (Document Presence Check) ---
+    // --- SECURE KYC GATE (Comprehensive Check) ---
     const isKycUploaded = 
       user?.kycDetails?.licenseFront && 
       user?.kycDetails?.licenseBack && 
       user?.kycDetails?.idProofFront && 
       user?.kycDetails?.idProofBack;
 
-    if (user.role === 'user' && !isKycUploaded) {
-      alert("Missing Documentation: Please upload your Driving License (Front & Back) and Identity Proof in the Profile section to unlock bookings.");
+    // Gate: If not admin/provider, they MUST have documents uploaded
+    if (user?.role !== 'admin' && user?.role !== 'provider' && !isKycUploaded) {
+      alert("Verification Required: Please upload your Driving License and Identity Proof in the Profile section to proceed.");
       navigate('/profile');
       return;
     }
