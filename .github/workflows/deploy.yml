@@ -63,9 +63,12 @@ jobs:
             cd ..
 
             echo "♻️ Restarting PM2..."
+            # Force kill anything already on port 5000 (Very important!)
+            sudo fuser -k 5000/tcp || true
+            
             cd $DEPLOY_PATH/backend
             pm2 delete luxedrive-backend || true
-            pm2 start server.js --name luxedrive-backend
+            pm2 start server.js --name luxedrive-backend --cwd $DEPLOY_PATH/backend
             pm2 save
             
             echo "🌐 Configuring NGINX..."
