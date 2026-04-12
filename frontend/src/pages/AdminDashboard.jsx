@@ -26,7 +26,8 @@ const AdminDashboard = () => {
 
   const [formData, setFormData] = useState({
     make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, 
-    dealerName: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139'
+    dealerName: '', imageUrl: '', longitude: '77.2090', latitude: '28.6139',
+    serviceType: 'rental', deliveryOptions: ['yard_pickup'], taxiFare: '', taxiAvailability: ''
   });
 
   useEffect(() => {
@@ -38,14 +39,14 @@ const AdminDashboard = () => {
     }
   }, [user]);
 
-  const { make, model, year, category, pricePerDay, countInStock, dealerName, imageUrl, longitude, latitude } = formData;
+  const { make, model, year, category, pricePerDay, countInStock, dealerName, imageUrl, longitude, latitude, serviceType, deliveryOptions, taxiFare, taxiAvailability } = formData;
 
   useEffect(() => {
     // 1. Enterprise Security: Evict users who are NOT Admins immediately
-    if (!user || !['admin', 'provider'].includes(user.role)) {
-      alert("Unauthorized Access: Only Administrators and Providers can enter the Operations Control Panel.");
+    if (!user || !['admin', 'provider', 'taxi_driver'].includes(user.role)) {
+      alert("Unauthorized Access: Only Administrators, Providers, and Taxi Drivers can enter the Operations Control Panel.");
       navigate('/');
-    } else if (user.role === 'provider' && user.providerStatus !== 'approved') {
+    } else if ((user.role === 'provider' || user.role === 'taxi_driver') && user.providerStatus !== 'approved') {
       alert("Account Pending: Your business profile is currently awaiting verification from an Administrator.");
       navigate('/fleet');
     }
@@ -95,7 +96,7 @@ const AdminDashboard = () => {
       };
       fetchKyc();
     }
-    if (activeTab === 'fleet' && user && ['admin', 'provider'].includes(user.role)) {
+    if (activeTab === 'fleet' && user && ['admin', 'provider', 'taxi_driver'].includes(user.role)) {
       dispatch(getCars());
     }
 
@@ -193,7 +194,9 @@ const AdminDashboard = () => {
     setFormData({
       make: car.make, model: car.model, year: car.year, category: car.category, pricePerDay: car.pricePerDay, 
       countInStock: car.countInStock || 1, dealerName: car.dealerName || 'LuxeDrive Premium',
-      imageUrl: car.images[0] || '', longitude: car.location?.coordinates[0] || '77.2090', latitude: car.location?.coordinates[1] || '28.6139'
+      imageUrl: car.images[0] || '', longitude: car.location?.coordinates[0] || '77.2090', latitude: car.location?.coordinates[1] || '28.6139',
+      serviceType: car.serviceType || 'rental', deliveryOptions: car.deliveryOptions || ['yard_pickup'],
+      taxiFare: car.taxiFare || '', taxiAvailability: car.taxiAvailability || ''
     });
     setActiveTab('deploy');
   };
@@ -206,7 +209,10 @@ const AdminDashboard = () => {
       make, model, year: Number(year), category, pricePerDay: Number(pricePerDay),
       countInStock: Number(countInStock), dealerName,
       images: [imageUrl],
-      location: { type: 'Point', coordinates: [Number(longitude), Number(latitude)] }
+      location: { type: 'Point', coordinates: [Number(longitude), Number(latitude)] },
+      serviceType, deliveryOptions,
+      taxiFare: serviceType === 'taxi' ? Number(taxiFare) : undefined,
+      taxiAvailability: serviceType === 'taxi' ? taxiAvailability : undefined
     };
 
     if (editCarId) {
@@ -323,6 +329,54 @@ const AdminDashboard = () => {
                  <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">Inventory Quantity (Available)</label>
                  <input type="number" name="countInStock" value={countInStock} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold text-white" placeholder="1" required />
               </div>
+              
+              <div className="md:col-span-2 pt-4 border-t border-gray-800">
+                <h4 className="text-luxe-gold text-sm font-bold uppercase tracking-widest mb-4">Service & Delivery Configuration</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">Primary Service Type</label>
+                    <select name="serviceType" value={serviceType} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold text-white" required>
+                      <option value="rental">Self-Drive Rental</option>
+                      <option value="taxi">Airport/Taxi Service</option>
+                    </select>
+                  </div>
+                  
+                  {serviceType === 'rental' ? (
+                    <div>
+                      <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">Delivery Options</label>
+                      <div className="flex flex-wrap gap-4 mt-2">
+                        {['home_delivery', 'airport_delivery', 'yard_pickup'].map(opt => (
+                          <label key={opt} className="flex items-center gap-2 text-xs uppercase cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={deliveryOptions.includes(opt)}
+                              onChange={(e) => {
+                                const newOpts = e.target.checked 
+                                  ? [...deliveryOptions, opt] 
+                                  : deliveryOptions.filter(o => o !== opt);
+                                setFormData(prev => ({ ...prev, deliveryOptions: newOpts }));
+                              }}
+                              className="accent-luxe-gold"
+                            />
+                            {opt.replace('_', ' ')}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">Flat Trip Fare (Taxi)</label>
+                        <input type="number" name="taxiFare" value={taxiFare} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold text-luxe-gold font-bold" placeholder="e.g. 1500" />
+                      </div>
+                      <div>
+                        <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">Availability Window</label>
+                        <input type="text" name="taxiAvailability" value={taxiAvailability} onChange={onChange} className="w-full bg-gray-800 border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold text-white" placeholder="e.g. 9 AM to 6 PM" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div>
                  <label className="block text-gray-400 text-xs tracking-widest uppercase mb-2">Rental Provider / Company Name</label>
                  <input type="text" name="dealerName" value={dealerName} onChange={onChange} className={`w-full bg-gray-800 border ${user?.role === 'provider' ? 'border-gray-900 text-gray-500 cursor-not-allowed' : 'border-gray-700 text-white'} rounded p-3 focus:outline-none focus:border-luxe-gold`} placeholder="e.g. Sixt, Zoomcar, LuxeDrive" required readOnly={user?.role === 'provider'} />
@@ -390,21 +444,29 @@ const AdminDashboard = () => {
                   <th className="py-4 px-4">Img</th>
                   <th className="py-4 px-4">Make / Model</th>
                   <th className="py-4 px-4">Provider</th>
-                  <th className="py-4 px-4">Segment</th>
+                  <th className="py-4 px-4">Segment / Service</th>
                   <th className="py-4 px-4">Stock</th>
-                  <th className="py-4 px-4">Rate (INR)</th>
+                  <th className="py-4 px-4">Rate / Fare</th>
                   <th className="py-4 px-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
-                {(user?.role === 'admin' ? cars : cars.filter(c => c.dealerName === user?.companyName)).map((car) => (
+                {(user?.role === 'admin' ? cars : cars.filter(c => (c.dealerName === user?.companyName) || (c.providerId === user?._id))).map((car) => (
                   <tr key={car._id} className="border-b border-gray-800 hover:bg-gray-800/50">
                     <td className="py-2 px-4"><img src={car.images[0]} alt="car" className="w-12 h-12 object-cover rounded shadow" /></td>
                     <td className="py-2 px-4 font-bold">{car.make} <span className="text-luxe-gold">{car.model}</span> ({car.year})</td>
                     <td className="py-2 px-4 text-xs font-bold text-gray-400">{car.dealerName || 'LuxeDrive'}</td>
-                    <td className="py-2 px-4 text-gray-400">{car.category}</td>
-                    <td className="py-2 px-4 italic font-bold text-gray-300">{car.countInStock || 0} In Stock</td>
-                    <td className="py-2 px-4 font-mono font-bold text-luxe-gold">₹{car.pricePerDay.toLocaleString()}</td>
+                    <td className="py-2 px-4">
+                      <div className="text-gray-400">{car.category}</div>
+                      <div className={`text-[10px] uppercase font-black px-1 rounded inline-block ${car.serviceType === 'taxi' ? 'bg-blue-900 text-blue-300' : 'bg-green-900 text-green-300'}`}>
+                        {car.serviceType || 'rental'}
+                      </div>
+                    </td>
+                    <td className="py-2 px-4 italic font-bold text-gray-300">{car.countInStock || 0}</td>
+                    <td className="py-2 px-4 font-mono font-bold text-luxe-gold">
+                      {car.serviceType === 'taxi' ? `₹${car.taxiFare?.toLocaleString()} (Fare)` : `₹${car.pricePerDay?.toLocaleString()} /Day`}
+                      {car.taxiAvailability && <div className="text-[9px] text-gray-500 font-sans tracking-tighter uppercase">{car.taxiAvailability}</div>}
+                    </td>
                     <td className="py-2 px-4">
                       <div className="flex gap-2">
                         <button onClick={() => editHandler(car)} className="px-3 py-1 bg-yellow-900 hover:bg-yellow-800 text-yellow-100 rounded text-xs font-bold uppercase transition">Edit</button>
