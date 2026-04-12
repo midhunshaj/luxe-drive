@@ -95,7 +95,9 @@ const AdminDashboard = () => {
       setSuccessMsg(`Provider ${status} successfully! ✅`);
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (error) {
-      alert("Failed to update provider status");
+      console.error(error);
+      const backendError = error.response?.data?.message || error.message || "Unknown error";
+      alert(`Failed to update provider status: ${backendError}`);
     }
   };
 

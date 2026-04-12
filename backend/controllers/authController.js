@@ -166,8 +166,8 @@ const updateProviderStatus = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (user) {
       user.providerStatus = req.body.status;
-      await user.save();
-      res.json({ message: 'Provider status updated', providerStatus: user.providerStatus });
+      await User.findByIdAndUpdate(req.params.id, { providerStatus: req.body.status });
+      res.json({ message: 'Provider status updated', providerStatus: req.body.status });
     } else {
       res.status(404).json({ message: 'Provider not found' });
     }
