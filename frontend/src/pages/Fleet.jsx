@@ -122,16 +122,17 @@ const Fleet = () => {
       return;
     }
 
-    // --- SECURE KYC GATE (Comprehensive Check) ---
-    const isKycUploaded = 
-      user?.kycDetails?.licenseFront && 
-      user?.kycDetails?.licenseBack && 
-      user?.kycDetails?.idProofFront && 
-      user?.kycDetails?.idProofBack;
+    // --- SECURE KYC GATE (Strict URL Check) ---
+    const kyc = user?.kycDetails;
+    const isKycUploaded = kyc && 
+                          kyc.licenseFront?.length > 5 && 
+                          kyc.licenseBack?.length > 5 && 
+                          kyc.idProofFront?.length > 5 && 
+                          kyc.idProofBack?.length > 5;
 
-    // Gate: If not admin/provider, they MUST have documents uploaded
-    if (user?.role !== 'admin' && user?.role !== 'provider' && !isKycUploaded) {
-      alert("Verification Required: Please upload your Driving License and Identity Proof in the Profile section to proceed.");
+    // Gate: ONLY Admins can bypass this security layer
+    if (user?.role !== 'admin' && !isKycUploaded) {
+      alert("⚠️ DOCUMENTATION MISSING: Your Driving License and ID Proof must be uploaded in the Profile section to reserve a vehicle. Please visit your Profile now.");
       navigate('/profile');
       return;
     }
@@ -178,6 +179,21 @@ const Fleet = () => {
 
   const processPayment = async (e) => {
     e.preventDefault();
+    
+    // --- SECONDARY SECURE KYC WALL ---
+    const kyc = user?.kycDetails;
+    const isKycUploaded = kyc && 
+                          kyc.licenseFront?.length > 5 && 
+                          kyc.licenseBack?.length > 5 && 
+                          kyc.idProofFront?.length > 5 && 
+                          kyc.idProofBack?.length > 5;
+
+    if (user?.role !== 'admin' && !isKycUploaded) {
+      alert("⚠️ Verification check failed. Please ensure all 4 documents are uploaded in your Profile.");
+      navigate('/profile');
+      return;
+    }
+
     if (!bookingData.deliveryLocation || !bookingData.licenseNo || !bookingData.phoneNo) {
       alert("Please fill in all details.");
       return;
