@@ -7,9 +7,11 @@ const morgan = require('morgan');
 const path = require('path');
 const connectDB = require('./config/db');
 
-// Load environment variables dynamically perfectly bypassing PM2's current-working-directory bug
-dotenv.config({ path: path.join(__dirname, '.env') });
-dotenv.config({ path: path.join(__dirname, '../.env') }); // Also check root just in case
+const envPath1 = path.join(__dirname, '.env');
+const envPath2 = path.join(__dirname, '../.env');
+console.log(`📡 Searching for config in: \n 1. ${envPath1} \n 2. ${envPath2}`);
+dotenv.config({ path: envPath1 });
+dotenv.config({ path: envPath2 });
 
 // Connect to MongoDB
 connectDB();
