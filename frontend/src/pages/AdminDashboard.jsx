@@ -14,6 +14,12 @@ const AdminDashboard = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editCarId, setEditCarId] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
+  
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
+  const { user } = useSelector((state) => state.auth);
+  const { cars, isLoading, isError, isSuccess, message } = useSelector((state) => state.cars);
 
   const [formData, setFormData] = useState({
     make: '', model: '', year: '', category: '', pricePerDay: '', countInStock: 1, 
@@ -30,12 +36,6 @@ const AdminDashboard = () => {
   }, [user]);
 
   const { make, model, year, category, pricePerDay, countInStock, dealerName, imageUrl, longitude, latitude } = formData;
-  
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  
-  const { user } = useSelector((state) => state.auth);
-  const { cars, isLoading, isError, isSuccess, message } = useSelector((state) => state.cars);
 
   useEffect(() => {
     // 1. Enterprise Security: Evict users who are NOT Admins immediately
@@ -390,14 +390,14 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  {(user?.role === 'admin' ? bookings : bookings.filter(b => b.car?.dealerName === user?.companyName)).map((b) => (
+                  {(user?.role === 'admin' ? bookings : bookings.filter(b => b.car && b.car.dealerName === user?.companyName)).map((b) => (
                     <tr key={b._id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
                       <td className="py-4 px-4">
                         <div className="font-bold">{b.user?.name || 'Unknown'}</div>
-                        <div className="text-gray-500 text-xs">{b.user?.email}</div>
+                        <div className="text-gray-500 text-xs">{b.user?.email || 'N/A'}</div>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="text-luxe-gold font-bold">{b.car?.make} {b.car?.model}</div>
+                        <div className="text-luxe-gold font-bold">{b.car ? `${b.car.make} ${b.car.model}` : 'DELETED VEHICLE'}</div>
                         <div className="text-[10px] text-gray-500">{b._id}</div>
                       </td>
                       <td className="py-4 px-4 text-gray-400 text-xs">
