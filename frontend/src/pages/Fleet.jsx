@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import io from 'socket.io-client';
+import GoogleAd from '../components/GoogleAd';
 
 const Fleet = () => {
   const dispatch = useDispatch();
@@ -243,6 +244,12 @@ const Fleet = () => {
             })}
           </div>
         )}
+
+        {/* Global Discovery Ad Section */}
+        <div className="mt-20 border-t border-gray-900 pt-10">
+           <p className="text-gray-600 text-[10px] uppercase tracking-widest text-center mb-4 font-bold">Recommended for Elite Explorers</p>
+           <GoogleAd slot="REPLACE_WITH_FLEET_PAGE_SLOT_ID" />
+        </div>
       </div>
 
       {/* Booking Modal */}
