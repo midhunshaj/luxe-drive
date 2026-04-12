@@ -31,8 +31,7 @@ const Register = () => {
     if (password !== confirmPassword) {
       setCustomError('Passwords do not match');
     } else {
-      const role = accountType === 'provider' ? 'provider' : accountType === 'taxi_driver' ? 'taxi_driver' : 'user';
-      dispatch(register({ name, email, password, role, companyName: (accountType === 'provider' || accountType === 'taxi_driver') ? companyName : '' }));
+      dispatch(register({ name, email, password, role: accountType === 'provider' ? 'provider' : 'user', companyName: accountType === 'provider' ? companyName : '' }));
     }
   };
 
@@ -64,15 +63,11 @@ const Register = () => {
               <input type="radio" value="provider" checked={accountType === 'provider'} onChange={() => setAccountType('provider')} className="text-luxe-gold focus:ring-luxe-gold" />
               <span className="text-sm text-gray-300 font-bold tracking-widest uppercase">Rental Provider</span>
             </label>
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input type="radio" value="taxi_driver" checked={accountType === 'taxi_driver'} onChange={() => setAccountType('taxi_driver')} className="text-luxe-gold focus:ring-luxe-gold" />
-              <span className="text-sm text-gray-300 font-bold tracking-widest uppercase">Taxi Driver</span>
-            </label>
           </div>
 
           <div>
             <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-2">
-              {accountType === 'provider' ? 'Director Name' : accountType === 'taxi_driver' ? 'Driver Name' : 'Full Legal Name'}
+              {accountType === 'provider' ? 'Director Name' : 'Full Legal Name'}
             </label>
             <input 
               type="text" 
@@ -82,19 +77,17 @@ const Register = () => {
               required
             />
           </div>
-          
-          {(accountType === 'provider' || accountType === 'taxi_driver') && (
+
+          {accountType === 'provider' && (
             <div>
-              <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-2">
-                {accountType === 'provider' ? 'Registered Company Name' : 'Taxi Operator Name'}
-              </label>
+              <label className="block text-gray-400 text-xs tracking-widest uppercase font-semibold mb-2">Registered Company Name</label>
               <input 
                 type="text" 
                 className="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:outline-none focus:border-luxe-gold transition-colors"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder={accountType === 'provider' ? "e.g. Enterprise Exotics" : "e.g. Premium Airport Taxi"}
-                required
+                placeholder="e.g. Enterprise Exotics"
+                required={accountType === 'provider'}
               />
             </div>
           )}

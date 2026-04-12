@@ -6,14 +6,6 @@ const carSchema = new mongoose.Schema({
   year: { type: Number, required: true },
   category: { type: String, required: true },
   pricePerDay: { type: Number, required: true },
-  serviceType: { type: String, enum: ['rental', 'taxi'], default: 'rental' },
-  deliveryOptions: {
-    type: [String],
-    enum: ['home_delivery', 'airport_delivery', 'yard_pickup'],
-    default: ['yard_pickup']
-  },
-  taxiFare: { type: Number }, // For taxi service
-  taxiAvailability: { type: String }, // e.g., "9 AM to 6 PM"
   availabilityStatus: { type: String, enum: ['available', 'rented', 'maintenance'], default: 'available' },
   countInStock: { type: Number, required: true, default: 1 },
   dealerName: { type: String, default: 'LuxeDrive Premium' },

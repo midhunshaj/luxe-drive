@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['user', 'provider', 'admin', 'taxi_driver'], default: 'user' },
+  role: { type: String, enum: ['user', 'provider', 'admin'], default: 'user' },
   companyName: { type: String }, // New field specifically for rental providers
   providerStatus: { type: String, enum: ['none', 'pending', 'approved', 'rejected'], default: 'none' },
   isVerified: { type: Boolean, default: false },
