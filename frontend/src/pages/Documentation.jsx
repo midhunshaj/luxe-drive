@@ -4,30 +4,30 @@ import GoogleAd from '../components/GoogleAd';
 
 const Documentation = () => {
   return (
-    <div className="pt-32 pb-20 min-h-screen bg-luxe-dark text-gray-300">
+    <div className="pt-24 pb-20 min-h-screen bg-luxe-dark text-gray-300">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-16"
+          className="text-center mb-6"
         >
-          <h1 className="text-white text-4xl md:text-6xl font-black uppercase tracking-[0.2em] mb-6">
+          <h1 className="text-white text-3xl md:text-5xl font-black uppercase tracking-[0.2em] mb-4">
             Technical <span className="text-luxe-gold">Architecture</span>
           </h1>
-          <p className="text-gray-500 max-w-2xl mx-auto uppercase tracking-widest text-sm font-bold">
+          <p className="text-gray-500 max-w-2xl mx-auto uppercase tracking-widest text-[9px] font-bold">
             A Deep Dive into the LuxeDrive Full-Stack Ecosystem
           </p>
         </motion.div>
 
         {/* Ad Slot */}
-        <div className="mb-12">
+        <div className="py-6">
           <GoogleAd slot="REPLACE_WITH_DOCS_TOP_SLOT" />
         </div>
 
         {/* Content Section */}
-        <div className="prose prose-invert prose-luxe max-w-none space-y-12">
+        <div className="prose prose-invert prose-luxe max-w-none space-y-6">
           
           <section>
             <h2 className="text-white text-2xl font-bold uppercase tracking-widest border-l-4 border-luxe-gold pl-6 mb-6 font-serif italic">

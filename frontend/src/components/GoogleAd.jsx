@@ -10,7 +10,7 @@ const GoogleAd = ({ slot, style, format = 'auto', responsive = 'true' }) => {
   }, []);
 
   return (
-    <div className="flex justify-center my-8 overflow-hidden rounded-lg">
+    <div className="flex justify-center overflow-hidden rounded-lg">
       <ins
         className="adsbygoogle"
         style={style || { display: 'block', minWidth: '300px', maxWidth: '100%' }}
