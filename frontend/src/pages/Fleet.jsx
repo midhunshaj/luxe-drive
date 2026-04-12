@@ -108,9 +108,15 @@ const Fleet = () => {
       return;
     }
 
-    // --- SECURE KYC GATE ---
-    if (user.role === 'user' && user.kycStatus !== 'approved') {
-      alert("Verification Required: To maintain the highest security standards, please complete your KYC (Identity & License) in the Profile section before booking.");
+    // --- SECURE KYC GATE (Document Presence Check) ---
+    const isKycUploaded = 
+      user?.kycDetails?.licenseFront && 
+      user?.kycDetails?.licenseBack && 
+      user?.kycDetails?.idProofFront && 
+      user?.kycDetails?.idProofBack;
+
+    if (user.role === 'user' && !isKycUploaded) {
+      alert("Missing Documentation: Please upload your Driving License (Front & Back) and Identity Proof in the Profile section to unlock bookings.");
       navigate('/profile');
       return;
     }
