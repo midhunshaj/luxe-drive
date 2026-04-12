@@ -60,18 +60,25 @@ jobs:
             cd ..
 
             echo "♻️ Restarting backend with PM2..."
+            cd /website/luxe-drive/backend
             if ! command -v pm2 &> /dev/null; then
               echo "⚙️ PM2 not found natively. Installing PM2 globally..."
               sudo npm install -g pm2
             fi
             
-            # Kill any ghost instances from 12 days ago!
-            pm2 kill || true 
-            pm2 start backend/server.js --name luxedrive-backend
+            # Kill anything on port 5000 to prevent EADDRINUSE crashes
+            sudo fuser -k 5000/tcp || true
+            
+            # Restart gracefully from inside the backend folder to ensure correct CWD
+            pm2 delete luxedrive-backend || true
+            pm2 start server.js --name luxedrive-backend
             pm2 save
+            cd ..
             
             echo "🌐 Fixing NGINX permanently to point to the new /website architecture..."
+            # Apply to both custom and default configs to be 100% sure
             sudo sed -i 's|/var/www/luxe-drive|/website/luxe-drive|g' /etc/nginx/sites-available/luxedrive || true
-            sudo nginx -t && sudo systemctl reload nginx
+            sudo sed -i 's|/var/www/luxe-drive|/website/luxe-drive|g' /etc/nginx/sites-available/default || true
+            sudo nginx -t && sudo systemctl restart nginx
 
             echo "✅ Deployment complete! LuxeDrive is live."
