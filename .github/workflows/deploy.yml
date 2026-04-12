@@ -24,13 +24,10 @@ jobs:
           username: ${{ secrets.AWS_USER }}
           key: ${{ secrets.AWS_SSH_KEY }}
           port: 22
-          debug: true
           script: |
-            echo "🚀 Starting LuxeDrive Deployment..."
+            set -e
+            echo "🚀 Starting LuxeDrive Deployment (Home Directory Architecture)..."
             
-            echo "🚀 Starting LuxeDrive Deployment..."
-            
-            # Deploy directly to user's home so they can easily find and edit files!
             DEPLOY_PATH="/home/midhun/luxe-drive"
             mkdir -p $DEPLOY_PATH
             
@@ -41,102 +38,72 @@ jobs:
               git clone https://github.com/midhunshaj/luxe-drive.git
               cd luxe-drive
             else
-              echo "📥 LuxeDrive found! Force Syncing latest code from GitHub..."
+              echo "📥 LuxeDrive found! Syncing..."
               cd $DEPLOY_PATH
-              # Fix dubious ownership safe-directory crash
               git config --global --add safe.directory $DEPLOY_PATH
               
-              # 📦 PERSIST UPLOADS: Backup images before reset
               mkdir -p /home/midhun/luxe_backups
               cp -r $DEPLOY_PATH/backend/uploads /home/midhun/luxe_backups/ || true
               
               git fetch --all
               git reset --hard origin/main
               
-              # 📦 RESTORE UPLOADS: Bring them back
               cp -r /home/midhun/luxe_backups/uploads/* $DEPLOY_PATH/backend/uploads/ || true
-              # Also pull from legacy /website if it exists
               cp -r /website/luxe-drive/backend/uploads/* $DEPLOY_PATH/backend/uploads/ || true
             fi
 
-
-            echo "📦 Installing backend dependencies..."
-            cd /home/midhun/luxe-drive/backend
+            echo "📦 Building Backend..."
+            cd $DEPLOY_PATH/backend
             npm install --omit=dev
-            cd ..
 
-            echo "🏗️ Building React frontend..."
-            cd /home/midhun/luxe-drive/frontend
+            echo "🏗️ Building Frontend..."
+            cd $DEPLOY_PATH/frontend
             npm install
-            rm -rf dist
             npm run build
-            if [ ! -d "dist" ]; then
-              echo "❌ ERROR: Frontend build failed. Dist folder missing!"
-              exit 1
-            fi
             cd ..
 
-            echo "♻️ Restarting backend with PM2..."
-            cd /home/midhun/luxe-drive/backend
-            if ! command -v pm2 &> /dev/null; then
-              echo "⚙️ PM2 not found natively. Installing PM2 globally..."
-              sudo npm install -g pm2
-            fi
-            
-            # Kill anything on port 5000 to prevent EADDRINUSE crashes
-            sudo fuser -k 5000/tcp || true
-            
-            # Restart gracefully from inside the backend folder to ensure correct CWD
+            echo "♻️ Restarting PM2..."
+            cd $DEPLOY_PATH/backend
             pm2 delete luxedrive-backend || true
             pm2 start server.js --name luxedrive-backend
             pm2 save
-            cd ..
             
-            echo "🌐 Perfectly Reconfiguring NGINX to point to Home Directory..."
-            # Create a fresh, high-performance Nginx config
-            sudo tee /etc/nginx/sites-available/luxedrive > /dev/null <<EOF
-server {
-    listen 80;
-    server_name midhunshaj.in www.midhunshaj.in;
+            echo "🌐 Configuring NGINX..."
+            sudo tee /etc/nginx/sites-available/luxedrive > /dev/null <<'EOF'
+            server {
+                listen 80;
+                server_name midhunshaj.in www.midhunshaj.in;
+                root /home/midhun/luxe-drive/frontend/dist;
+                index index.html;
 
-    root /home/midhun/luxe-drive/frontend/dist;
-    index index.html;
+                location / {
+                    try_files $uri $uri/ /index.html;
+                }
 
-    location / {
-        try_files \$uri \$uri/ /index.html;
-    }
+                location /api {
+                    proxy_pass http://127.0.0.1:5000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
+                }
 
-    location /api {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
-    }
+                location /socket.io {
+                    proxy_pass http://127.0.0.1:5000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection "upgrade";
+                    proxy_set_header Host $host;
+                }
 
-    location /socket.io/ {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$host;
-    }
-
-    location /uploads/ {
-        alias /home/midhun/luxe-drive/backend/uploads/;
-        add_header Cache-Control "public, max-age=31536000";
-    }
-}
-EOF
+                location /uploads {
+                    alias /home/midhun/luxe-drive/backend/uploads/;
+                }
+            }
+            EOF
             
-            # Link and test
-            sudo ln -sf /etc/nginx/sites-available/luxedrive /etc/nginx/sites-enabled/ || true
-            sudo rm /etc/nginx/sites-enabled/default || true
+            sudo ln -sf /etc/nginx/sites-available/luxedrive /etc/nginx/sites-enabled/
+            sudo rm -f /etc/nginx/sites-enabled/default
             sudo nginx -t && sudo systemctl restart nginx
-            
-            # Re-apply SSL because removing default might have temporarily affected Certbot
-            # (Certbot handles its own blocks, but this ensures our server_name is active)
-            # sudo certbot --nginx -d midhunshaj.in -d www.midhunshaj.in --non-interactive --agree-tos --redirect || true
-
-            echo "✅ Deployment complete! LuxeDrive is live in /home/midhun/luxe-drive"
+            echo "✅ DEPLOYMENT SUCCESSFUL!"
