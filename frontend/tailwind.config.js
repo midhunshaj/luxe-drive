@@ -8,7 +8,7 @@ export default {
     extend: {
       colors: {
         luxe: {
-          gold: '#D4AF37',
+          gold: '#d43737ff',
           dark: '#111827',
           panel: '#1F2937'
         }
