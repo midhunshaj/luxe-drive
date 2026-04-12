@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist, getProviders, updateProviderStatus, getKycRequests, updateKycStatus: updateKycStatusCtrl } = require('../controllers/authController');
+const { registerUser, authUser, getUserProfile, updateUserProfile, toggleWishlist, getProviders, updateProviderStatus, getKycRequests, updateKycStatus: updateKycStatusCtrl, googleLogin } = require('../controllers/authController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 router.post('/register', registerUser);
