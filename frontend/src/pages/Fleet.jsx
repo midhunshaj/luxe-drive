@@ -28,7 +28,9 @@ const Fleet = () => {
     dispatch(getCars());
     
     // --- Initialize Real-time Conflict Prevention ---
-    const newSocket = io(window.location.origin.replace('5173', '5000'));
+    // --- Initialize Real-time Conflict Prevention ---
+    const socketUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin;
+    const newSocket = io(socketUrl);
     setSocket(newSocket);
 
     newSocket.on('initialLocks', (locks) => setLockedCars(locks));
