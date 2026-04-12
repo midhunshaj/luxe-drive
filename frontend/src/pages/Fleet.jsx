@@ -288,22 +288,25 @@ const Fleet = () => {
           user.kycDetails?.idProofBack?.length > 5
         ) && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-12 bg-red-900/20 border border-red-500/50 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between backdrop-blur-md"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-12 bg-gradient-to-r from-red-950 via-gray-900 to-red-950 border-2 border-luxe-gold/30 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between shadow-[0_0_50px_rgba(220,38,38,0.15)] relative overflow-hidden"
           >
-            <div className="flex items-center mb-4 md:mb-0">
-               <span className="text-3xl mr-4">⚠️</span>
+            <div className="absolute top-0 left-0 w-1 h-full bg-luxe-gold" />
+            <div className="flex items-center mb-6 md:mb-0 relative z-10">
+               <div className="bg-red-600 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg mr-6 animate-bounce">
+                  🛡️
+               </div>
                <div>
-                  <h4 className="text-lg font-bold uppercase tracking-widest text-white">Action Required: KYC Documentation</h4>
-                  <p className="text-gray-400 text-sm">You must upload your Driving License and ID Proof to reserve any elite vehicle.</p>
+                  <h4 className="text-xl font-black uppercase tracking-[0.2em] text-white mb-1">KYC Verification Missing</h4>
+                  <p className="text-gray-400 text-sm font-medium">To maintain elite security standards, you must upload your documents before booking.</p>
                </div>
             </div>
             <button 
               onClick={() => navigate('/profile')} 
-              className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-8 rounded-xl uppercase tracking-widest text-xs transition-all shadow-lg"
+              className="bg-luxe-gold hover:bg-white text-black font-black py-4 px-10 rounded-2xl uppercase tracking-[0.1em] text-xs transition-all duration-500 shadow-[0_10px_20px_rgba(212,175,55,0.3)] hover:scale-105 relative z-10"
             >
-              Upload Documents Now
+              Get Verified Now
             </button>
           </motion.div>
         )}
