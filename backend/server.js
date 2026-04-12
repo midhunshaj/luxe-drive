@@ -9,6 +9,7 @@ const connectDB = require('./config/db');
 
 // Load environment variables dynamically perfectly bypassing PM2's current-working-directory bug
 dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config({ path: path.join(__dirname, '../.env') }); // Also check root just in case
 
 // Connect to MongoDB
 connectDB();
