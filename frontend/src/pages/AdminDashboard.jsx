@@ -165,7 +165,7 @@ const AdminDashboard = () => {
     try {
       const config = { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${user.token}` } };
       const { data } = await axios.post('/api/upload', uploadData, config);
-      setFormData((prev) => ({ ...prev, imageUrl: data }));
+      setFormData((prevState) => ({ ...prevState, imageUrl: data.url }));
       setUploadingImage(false);
     } catch (error) {
       console.error(error);

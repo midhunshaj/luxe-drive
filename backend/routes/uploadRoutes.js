@@ -45,7 +45,7 @@ router.post('/', upload.single('image'), (req, res) => {
   }
   // Convert absolute path to a relative URL for storage in DB
   const relativePath = `/uploads/${req.file.filename}`;
-  res.send(relativePath);
+  res.json({ url: relativePath });
 });
 
 module.exports = router;
