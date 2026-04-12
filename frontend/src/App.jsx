@@ -10,6 +10,7 @@ import Fleet from './pages/Fleet';
 import AdminDashboard from './pages/AdminDashboard';
 import MyBookings from './pages/MyBookings';
 import Profile from './pages/Profile';
+import Documentation from './pages/Documentation';
 
 function App() {
   const { user } = useSelector((state) => state.auth);
@@ -36,6 +37,7 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/documentation" element={<Documentation />} />
           <Route path="*" element={<div className="p-40 text-center text-4xl text-gray-500">Page Coming Soon!</div>} />
         </Routes>
         <Footer />

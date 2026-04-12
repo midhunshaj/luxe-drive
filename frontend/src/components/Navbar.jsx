@@ -39,8 +39,8 @@ const Navbar = () => {
           
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/fleet" className="text-sm uppercase tracking-wider text-gray-300 hover:text-luxe-gold transition-colors duration-300">Our Fleet</Link>
-            
+            <Link to="/fleet" className="text-gray-300 hover:text-luxe-gold text-xs font-bold uppercase tracking-widest transition-colors">Fleet</Link>
+            <Link to="/documentation" className="text-gray-300 hover:text-luxe-gold text-xs font-bold uppercase tracking-widest transition-colors">Documentation</Link>
             {user ? (
                <>
                  {(user.role === 'admin' || (user.role === 'provider' && user.providerStatus === 'approved')) && (
