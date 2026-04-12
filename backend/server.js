@@ -12,6 +12,20 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Connect to MongoDB
 connectDB();
+
+console.log('🔍 Boot Check: Google Auth ID present?', !!process.env.GOOGLE_CLIENT_ID);
+if (!process.env.GOOGLE_CLIENT_ID) console.warn("🚨 Warning: GOOGLE_CLIENT_ID is missing in .env. Social login will fail.");
+
+// --- CRASH PREVENTION: Global Error Listeners ---
+process.on('uncaughtException', (err) => {
+  console.error('🔥 CRITICAL: Uncaught Exception:', err.message);
+  console.error(err.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('⚠️ UNHANDLED REJECTION:', reason);
+});
+
 const Car = require('./models/Car'); // Require models at top level for stability
 
 const app = express();
