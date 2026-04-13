@@ -34,7 +34,13 @@ const Fleet = () => {
   });
 
   const now = new Date();
-  const getTodayStr = (d = now) => d.toISOString().split('T')[0];
+  // Use local date parts — NOT toISOString() which is always UTC
+  const getTodayStr = (d = now) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
   const getTimeStr = (d = now) => d.toTimeString().slice(0, 5);
 
   const [bookingType, setBookingType] = useState('1day');
@@ -158,6 +164,17 @@ const Fleet = () => {
     
     if (!bookingData.licenseNo || !bookingData.phoneNo) {
       alert("Please fill in all details.");
+      return;
+    }
+
+    // Guard: reject past dates using LOCAL date comparison
+    const todayLocal = getTodayStr(new Date());
+    if (startDate < todayLocal) {
+      alert("⚠️ Arrival date cannot be in the past. Please select today or a future date.");
+      return;
+    }
+    if (endDate < startDate) {
+      alert("⚠️ Return date must be on or after the arrival date.");
       return;
     }
 
