@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import CustomCursor from './components/CustomCursor';
 import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -27,7 +28,8 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen font-sans selection:bg-luxe-gold selection:text-black">
+      <div className="min-h-screen font-sans selection:bg-luxe-gold selection:text-black cursor-none">
+        <CustomCursor />
         <Navbar />
         <Routes>
           <Route path="/" element={<LandingPage />} />
