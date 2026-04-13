@@ -92,37 +92,102 @@ const Navbar = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div 
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-[100] md:hidden bg-luxe-dark flex flex-col items-center justify-center p-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] md:hidden bg-luxe-dark p-8 overflow-hidden"
           >
-            <div className="absolute top-0 right-0 w-full h-full opacity-20 bg-[url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80')] bg-cover bg-center" />
-            <div className="absolute inset-0 bg-luxe-dark/90" />
+            {/* Cinematic Background for Mobile Menu */}
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-10 blur-sm" />
+            <div className="absolute inset-0 bg-gradient-to-b from-luxe-dark/80 via-luxe-dark to-luxe-dark" />
             
-            <div className="relative z-10 flex flex-col items-center gap-12 text-center">
-              {navLinks.map((link) => (
-                <Link 
-                  key={link.name}
-                  to={link.path} 
-                  onClick={() => setIsOpen(false)}
-                  className="text-4xl font-serif text-white hover:text-luxe-gold transition-colors"
+            <div className="relative z-10 h-full flex flex-col pt-32 pb-12">
+              <div className="flex flex-col gap-8">
+                {navLinks.map((link, i) => (
+                  <motion.div
+                    key={link.name}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 + 0.2 }}
+                  >
+                    <Link 
+                      to={link.path} 
+                      onClick={() => setIsOpen(false)}
+                      className="text-4xl font-serif text-white hover:text-luxe-gold transition-colors flex items-center gap-4 group"
+                    >
+                      <span className="text-xs font-serif italic text-luxe-gold opacity-40 group-hover:opacity-100 transition-opacity">0{i + 1}</span>
+                      {link.name}
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="mt-auto space-y-8">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="h-[1px] w-full bg-white/5 shadow-[0_1px_0_rgba(255,255,255,0.05)]" 
+                />
+                
+                <div className="grid grid-cols-2 gap-8">
+                  {user ? (
+                    <>
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+                        <Link to="/profile" onClick={() => setIsOpen(false)} className="flex flex-col gap-1">
+                          <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Identity</span>
+                          <span className="text-sm text-white font-serif italic">My Profile</span>
+                        </Link>
+                      </motion.div>
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
+                        <Link to="/my-bookings" onClick={() => setIsOpen(false)} className="flex flex-col gap-1">
+                          <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Reservations</span>
+                          <span className="text-sm text-white font-serif italic">Active Bookings</span>
+                        </Link>
+                      </motion.div>
+                      {(user.role === 'admin' || user.role === 'provider') && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
+                          <Link to="/admin" onClick={() => setIsOpen(false)} className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-widest text-luxe-gold font-bold">Access Control</span>
+                            <span className="text-sm text-luxe-gold font-serif italic font-bold">Dashboard ↵</span>
+                          </Link>
+                        </motion.div>
+                      )}
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
+                        <button onClick={onLogout} className="flex flex-col gap-1 text-left">
+                          <span className="text-[9px] uppercase tracking-widest text-red-500/50 font-bold">Termination</span>
+                          <span className="text-sm text-red-500/80 font-serif italic">Log Out</span>
+                        </button>
+                      </motion.div>
+                    </>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6 }}
+                      className="col-span-2"
+                    >
+                      <Link to="/login" onClick={() => setIsOpen(false)} className="block w-full text-center py-5 bg-luxe-gold text-black text-[10px] font-bold uppercase tracking-[0.4em] rounded-full">
+                        Secure Authentication
+                      </Link>
+                    </motion.div>
+                  )}
+                </div>
+
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.1 }}
+                  className="flex justify-between items-center"
                 >
-                  {link.name}
-                </Link>
-              ))}
-              
-              <div className="h-[1px] w-24 bg-white/10" />
-              
-              {user ? (
-                <>
-                  <Link to="/profile" onClick={() => setIsOpen(false)} className="text-xl font-serif text-white/50">Profile</Link>
-                  <button onClick={onLogout} className="text-xl font-serif text-red-500/70">Logout</button>
-                </>
-              ) : (
-                <Link to="/login" onClick={() => setIsOpen(false)} className="text-2xl font-serif text-luxe-gold">Sign In</Link>
-              )}
+                  <span className="text-[8px] uppercase tracking-[0.4em] text-gray-600 font-bold">© LuxeDrive 2026</span>
+                  <div className="flex gap-4">
+                    <div className="w-1 h-1 rounded-full bg-luxe-gold/30" />
+                    <div className="w-1 h-1 rounded-full bg-luxe-gold/30" />
+                    <div className="w-1 h-1 rounded-full bg-luxe-gold/30" />
+                  </div>
+                </motion.div>
+              </div>
             </div>
           </motion.div>
         )}

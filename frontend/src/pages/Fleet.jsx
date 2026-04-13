@@ -240,14 +240,14 @@ const Fleet = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-block px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-8"
+            className="inline-block px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-6 md:mb-8"
           >
-            <span className="text-[10px] uppercase tracking-[0.4em] text-luxe-gold font-bold">Curated Excellence</span>
+            <span className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] md:tracking-[0.4em] text-luxe-gold font-bold">Curated Excellence</span>
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-8xl font-serif mb-8"
+            className="text-4xl md:text-8xl font-serif mb-6 md:mb-8"
           >
             The <span className="text-gradient">Elite</span> Fleet
           </motion.h1>
@@ -255,7 +255,7 @@ const Fleet = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-gray-400 text-lg md:text-xl font-light max-w-2xl mx-auto"
+            className="text-gray-400 text-base md:text-xl font-light max-w-2xl mx-auto px-4"
           >
             Experience unparalleled luxury with our world-class collection of performance and prestige vehicles.
           </motion.p>
@@ -263,31 +263,31 @@ const Fleet = () => {
       </section>
 
       {/* Filter Section */}
-      <section className="max-w-7xl mx-auto px-6 mb-24 relative z-20">
-        <div className="glass-card p-10 flex flex-col md:flex-row items-center gap-8 justify-between">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1 w-full">
-            <div className="space-y-3">
-              <label className="text-[10px] uppercase tracking-[0.3em] text-white/50 font-bold ml-1">Arrival Date</label>
+      <section className="max-w-7xl mx-auto px-4 md:px-6 mb-16 md:mb-24 relative z-20">
+        <div className="glass-card p-6 md:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-8 justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 flex-1 w-full">
+            <div className="space-y-2 md:space-y-3">
+              <label className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] text-white/50 font-bold ml-1">Arrival Date</label>
               <input 
                 type="date" 
                 value={startDate} 
                 onChange={(e) => setStartDate(e.target.value)} 
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white hover:border-luxe-gold/30 focus:border-luxe-gold outline-none transition order-first"
+                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-luxe-gold/30 focus:border-luxe-gold outline-none transition text-sm"
               />
             </div>
-            <div className="space-y-3">
-              <label className="text-[10px] uppercase tracking-[0.3em] text-white/50 font-bold ml-1">Return Date</label>
+            <div className="space-y-2 md:space-y-3">
+              <label className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] text-white/50 font-bold ml-1">Return Date</label>
               <input 
                 type="date" 
                 value={endDate} 
                 onChange={(e) => setEndDate(e.target.value)} 
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white hover:border-luxe-gold/30 focus:border-luxe-gold outline-none transition"
+                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-luxe-gold/30 focus:border-luxe-gold outline-none transition text-sm"
               />
             </div>
           </div>
           <button 
             onClick={() => dispatch(getCars({ startDate, endDate }))}
-            className="h-full px-12 py-5 bg-white text-black font-bold uppercase text-[10px] tracking-[0.3em] rounded-xl hover:bg-luxe-gold transition-colors whitespace-nowrap"
+            className="w-full md:w-auto px-10 md:px-12 py-4 md:py-5 bg-white text-black font-bold uppercase text-[10px] tracking-[0.2em] md:tracking-[0.3em] rounded-xl hover:bg-luxe-gold transition-colors whitespace-nowrap"
           >
             Apply Dates
           </button>
@@ -332,32 +332,32 @@ const Fleet = () => {
                   </div>
 
                   {/* Content Part */}
-                  <div className="md:w-1/2 p-10 flex flex-col justify-between">
+                  <div className="md:w-1/2 p-6 md:p-10 flex flex-col justify-between">
                     <div>
-                      <div className="flex justify-between items-start mb-4">
+                      <div className="flex justify-between items-start mb-3 md:mb-4">
                         <div className="font-serif">
-                          <h3 className="text-3xl text-white mb-1">{car.make}</h3>
-                          <p className="text-luxe-gold text-xl italic">{car.model}</p>
+                          <h3 className="text-2xl md:text-3xl text-white mb-1">{car.make}</h3>
+                          <p className="text-luxe-gold text-lg md:text-xl italic">{car.model}</p>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-6 mb-8 text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500">
+                      <div className="flex items-center gap-4 md:gap-6 mb-6 md:mb-8 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500">
                         <div className="flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-luxe-gold" />
                           <span>{car.year} Model</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={`w-1.5 h-1.5 rounded-full ${isUnavailable ? 'bg-red-500' : 'bg-green-500'}`} />
-                          <span>{isUnavailable ? 'Not Available' : 'Ready'}</span>
+                          <span>{isUnavailable ? 'Reserved' : 'Available'}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-6">
-                      <div className="flex items-baseline justify-between border-b border-white/5 pb-4">
-                        <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-500">Rate / Day</span>
+                    <div className="space-y-4 md:space-y-6">
+                      <div className="flex items-baseline justify-between border-b border-white/5 pb-3 md:pb-4">
+                        <span className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] font-bold text-gray-500">Rate / Day</span>
                         <div className="text-right">
-                          <span className="text-2xl font-serif text-white">₹{car.pricePerDay.toLocaleString()}</span>
+                          <span className="text-xl md:text-2xl font-serif text-white">₹{car.pricePerDay.toLocaleString()}</span>
                         </div>
                       </div>
 
@@ -371,7 +371,7 @@ const Fleet = () => {
                         }`}
                       >
                         <div className="absolute inset-0 bg-white group-hover/btn:bg-luxe-gold transition-colors duration-500" />
-                        <span className="relative z-10 text-black text-[10px] font-bold uppercase tracking-[0.4em]">
+                        <span className="relative z-10 text-black text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] md:tracking-[0.4em]">
                           {isUnavailable ? 'Reserved' : (pendingLockId === car._id ? 'Securing...' : 'Reserve Now')}
                         </span>
                       </button>
@@ -404,93 +404,93 @@ const Fleet = () => {
               className="relative w-full max-w-4xl bg-luxe-dark-soft border border-white/10 rounded-2xl overflow-hidden max-h-[90vh] flex flex-col md:flex-row shadow-2xl"
             >
               {/* Left Side: Summary */}
-              <div className="md:w-2/5 p-12 bg-[#080808] border-r border-white/5 flex flex-col justify-between">
+              <div className="md:w-2/5 p-8 md:p-12 bg-[#080808] border-b md:border-b-0 md:border-r border-white/5 flex flex-col justify-between">
                 <div>
-                  <div className="text-[10px] uppercase tracking-[0.4em] text-luxe-gold font-bold mb-6">Reservation Summary</div>
-                  <h2 className="text-4xl font-serif text-white mb-2">{selectedCar.make}</h2>
-                  <p className="text-luxe-gold text-2xl font-serif italic mb-8">{selectedCar.model}</p>
+                  <div className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] md:tracking-[0.4em] text-luxe-gold font-bold mb-4 md:mb-6">Reservation Summary</div>
+                  <h2 className="text-3xl md:text-4xl font-serif text-white mb-1 md:mb-2">{selectedCar.make}</h2>
+                  <p className="text-luxe-gold text-xl md:text-2xl font-serif italic mb-6 md:mb-8">{selectedCar.model}</p>
                   
-                  <div className="space-y-6">
+                  <div className="space-y-4 md:space-y-6">
                     <div className="flex flex-col gap-1">
-                      <span className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Pick-up Location</span>
-                      <span className="text-sm text-white/90 font-light">{selectedCar.dealerName || 'LuxeDrive Elite Center'}</span>
+                      <span className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold">Pick-up Location</span>
+                      <span className="text-xs md:text-sm text-white/90 font-light">{selectedCar.dealerName || 'LuxeDrive Elite Center'}</span>
                     </div>
-                    <div className="h-32 rounded-xl overflow-hidden border border-white/5 opacity-60">
+                    <div className="h-24 md:h-32 rounded-xl overflow-hidden border border-white/5 opacity-60">
                       <iframe width="100%" height="100%" style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) brightness(0.7)' }} loading="lazy" src={`https://maps.google.com/maps?q=${selectedCar.location.coordinates[1]},${selectedCar.location.coordinates[0]}&z=15&output=embed`}></iframe>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-8 border-t border-white/5">
-                  <div className="flex justify-between items-baseline mb-2">
-                    <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Base Rate</span>
-                    <span className="text-xl font-serif text-white">₹{selectedCar.pricePerDay.toLocaleString()}</span>
+                <div className="pt-6 md:pt-8 border-t border-white/5 mt-6 md:mt-0">
+                  <div className="flex justify-between items-baseline mb-1 md:mb-2">
+                    <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-gray-500 font-bold">Base Rate</span>
+                    <span className="text-lg md:text-xl font-serif text-white">₹{selectedCar.pricePerDay.toLocaleString()}</span>
                   </div>
-                  <p className="text-[10px] text-gray-600 font-bold tracking-widest uppercase italic">Includes premium insurance & concierge service</p>
+                  <p className="text-[8px] md:text-[9px] text-gray-600 font-bold tracking-widest uppercase italic">Includes premium insurance & concierge</p>
                 </div>
               </div>
 
               {/* Right Side: Form */}
-              <div className="md:w-3/5 p-12 overflow-y-auto custom-scrollbar">
-                <form onSubmit={processPayment} className="space-y-10">
-                  <div className="space-y-8">
-                    <h3 className="text-xs uppercase tracking-[0.3em] font-bold text-white/80 border-b border-white/5 pb-4">Configuration</h3>
+              <div className="md:w-3/5 p-8 md:p-12 overflow-y-auto custom-scrollbar">
+                <form onSubmit={processPayment} className="space-y-8 md:space-y-10">
+                  <div className="space-y-6 md:space-y-8">
+                    <h3 className="text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] font-bold text-white/80 border-b border-white/5 pb-3">Configuration</h3>
                     
-                    <div className="flex gap-4">
+                    <div className="flex gap-3 md:gap-4">
                       {['1day', 'custom'].map(type => (
                         <button 
                           key={type}
                           type="button" 
                           onClick={() => setBookingType(type)}
-                          className={`flex-1 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${bookingType === type ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/10 hover:border-white/30'}`}
+                          className={`flex-1 py-3 md:py-4 rounded-xl text-[8px] md:text-[10px] font-bold uppercase tracking-widest transition-all border ${bookingType === type ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-white/10 hover:border-white/30'}`}
                         >
                           {type === '1day' ? 'Standard (24h)' : 'Custom Period'}
                         </button>
                       ))}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-3">
-                        <label className="text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Arrival Date</label>
-                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white hover:border-white/30 outline-none transition text-sm" required />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                      <div className="space-y-2">
+                        <label className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Arrival Date</label>
+                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-white/30 outline-none transition text-xs md:text-sm" required />
                       </div>
-                      <div className="space-y-3">
-                        <label className="text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Arrival Time</label>
-                        <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white hover:border-white/30 outline-none transition text-sm" required />
+                      <div className="space-y-2">
+                        <label className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Arrival Time</label>
+                        <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-white/30 outline-none transition text-xs md:text-sm" required />
                       </div>
                     </div>
 
-                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 transition-opacity duration-500 ${bookingType === '1day' ? 'opacity-30 pointer-events-none' : ''}`}>
-                      <div className="space-y-3">
-                        <label className="text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Return Date</label>
-                        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white outline-none transition text-sm" required />
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 transition-opacity duration-500 ${bookingType === '1day' ? 'opacity-30 pointer-events-none' : ''}`}>
+                      <div className="space-y-2">
+                        <label className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Return Date</label>
+                        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white outline-none transition text-xs md:text-sm" required />
                       </div>
-                      <div className="space-y-3">
-                        <label className="text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Return Time</label>
-                        <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white outline-none transition text-sm" required />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-8">
-                    <h3 className="text-xs uppercase tracking-[0.3em] font-bold text-white/80 border-b border-white/5 pb-4">Verification</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-3">
-                        <label className="text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Permit Number</label>
-                        <input type="text" value={bookingData.licenseNo} onChange={(e) => setBookingData({...bookingData, licenseNo: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white hover:border-white/30 outline-none transition text-sm uppercase" placeholder="Verified License" required />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Emergency Handle</label>
-                        <input type="tel" value={bookingData.phoneNo} onChange={(e) => setBookingData({...bookingData, phoneNo: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white hover:border-white/30 outline-none transition text-sm" placeholder="+91 XXXX XXX XXX" required />
+                      <div className="space-y-2">
+                        <label className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Return Time</label>
+                        <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white outline-none transition text-xs md:text-sm" required />
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-10 flex gap-6">
-                    <button type="button" onClick={closeModal} className="flex-1 py-5 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Discard</button>
+                  <div className="space-y-6 md:space-y-8">
+                    <h3 className="text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] font-bold text-white/80 border-b border-white/5 pb-3">Verification</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                      <div className="space-y-2">
+                        <label className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Permit Number</label>
+                        <input type="text" value={bookingData.licenseNo} onChange={(e) => setBookingData({...bookingData, licenseNo: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-white/30 outline-none transition text-xs md:text-sm uppercase" placeholder="Verified License" required />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Emergency Handle</label>
+                        <input type="tel" value={bookingData.phoneNo} onChange={(e) => setBookingData({...bookingData, phoneNo: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-white/30 outline-none transition text-xs md:text-sm" placeholder="+91 XXXX XXX XXX" required />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 md:pt-10 flex flex-col sm:flex-row gap-4 md:gap-6">
+                    <button type="button" onClick={closeModal} className="w-full sm:flex-1 py-4 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors order-last sm:order-first">Discard</button>
                     <button 
                       type="submit" 
-                      className="flex-[2] bg-luxe-gold text-black font-bold py-5 rounded-2xl uppercase tracking-[0.4em] text-[10px] shadow-2xl hover:scale-[1.02] transition-all"
+                      className="w-full sm:flex-[2] bg-luxe-gold text-black font-bold py-4 md:py-5 rounded-2xl uppercase tracking-[0.3em] md:tracking-[0.4em] text-[9px] md:text-[10px] shadow-2xl hover:scale-[1.02] transition-all"
                     >
                       Authenticate & Pay
                     </button>

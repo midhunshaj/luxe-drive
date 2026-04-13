@@ -85,31 +85,31 @@ const Profile = () => {
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-7xl font-serif"
+            className="text-4xl md:text-7xl font-serif"
           >
             Profile <span className="text-luxe-gold italic font-serif">&</span> Identity
           </motion.h1>
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-6">
+      <div className="max-w-4xl mx-auto px-4 md:px-6">
         {message && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/5 border border-white/10 p-4 mb-12 rounded-xl text-[10px] uppercase tracking-widest text-center font-bold text-luxe-gold"
+            className="bg-white/5 border border-white/10 p-4 mb-8 md:mb-12 rounded-xl text-[9px] md:text-[10px] uppercase tracking-widest text-center font-bold text-luxe-gold"
           >
             {message}
           </motion.div>
         )}
 
-        <form onSubmit={submitHandler} className="space-y-16">
-          <div className="glass-card p-12 space-y-12">
-            <h3 className="text-xs uppercase tracking-[0.3em] font-bold text-white/80 border-b border-white/5 pb-6">Core Authentication</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <label className="text-[9px] uppercase tracking-[0.3em] text-gray-500 font-bold ml-1">Legal Name</label>
-                <input type="text" name="name" className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white hover:border-white/30 focus:border-luxe-gold outline-none transition text-sm" value={profileData.name} onChange={handleChange} required />
+        <form onSubmit={submitHandler} className="space-y-8 md:space-y-16">
+          <div className="glass-card p-6 md:p-12 space-y-8 md:space-y-12">
+            <h3 className="text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] font-bold text-white/80 border-b border-white/5 pb-4 md:pb-6">Core Authentication</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              <div className="space-y-2 md:space-y-3">
+                <label className="text-[8px] md:text-[9px] uppercase tracking-[0.2em] md:tracking-[0.3em] text-gray-500 font-bold ml-1">Legal Name</label>
+                <input type="text" name="name" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-white/30 focus:border-luxe-gold outline-none transition text-sm" value={profileData.name} onChange={handleChange} required />
               </div>
               <div className="space-y-3">
                 <label className="text-[9px] uppercase tracking-[0.3em] text-gray-500 font-bold ml-1">Secure Email</label>
@@ -126,18 +126,18 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="glass-card p-12 space-y-12">
-            <div className="flex justify-between items-center border-b border-white/5 pb-6">
-              <h3 className="text-xs uppercase tracking-[0.3em] font-bold text-white/80">KYC Documentation</h3>
-              <div className={`px-4 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase border ${user?.kycStatus === 'approved' ? 'border-green-500/30 text-green-400 bg-green-500/5' : 'border-red-500/30 text-red-400 bg-red-500/5'}`}>
+          <div className="glass-card p-6 md:p-12 space-y-8 md:space-y-12">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-6">
+              <h3 className="text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] font-bold text-white/80">KYC Documentation</h3>
+              <div className={`px-4 py-1.5 rounded-full text-[8px] md:text-[9px] font-bold tracking-widest uppercase border ${user?.kycStatus === 'approved' ? 'border-green-500/30 text-green-400 bg-green-500/5' : 'border-red-500/30 text-red-400 bg-red-500/5'}`}>
                 {user?.kycStatus === 'approved' ? 'Verified Entity' : 'Pending Verification'}
               </div>
             </div>
 
-            <div className="space-y-12">
-              <div className="space-y-6">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold">Operator Privilege License</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-10 md:space-y-12">
+              <div className="space-y-4 md:space-y-6">
+                <p className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold">Operator Privilege License</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   {['licenseFront', 'licenseBack'].map(field => (
                     <div key={field} className="relative aspect-video rounded-2xl bg-white/5 border border-white/10 border-dashed hover:border-luxe-gold/50 transition-colors group overflow-hidden">
                       {isUploading[field] ? (

@@ -76,34 +76,30 @@ const LandingPage = () => {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="relative z-10 max-w-6xl mx-auto text-center"
+          className="relative z-10 max-w-6xl mx-auto text-center px-4"
         >
-          <motion.div variants={itemVariants} className="mb-6">
-            <span className="text-luxe-gold uppercase tracking-[0.5em] text-xs font-bold bg-white/5 px-4 py-2 rounded-full border border-white/10 backdrop-blur-sm">
-              The Quintessential Driving Experience
-            </span>
-          </motion.div>
 
-          <motion.h1 variants={itemVariants} className="text-6xl md:text-9xl font-serif text-white mb-8 leading-[0.9]">
+
+          <motion.h1 variants={itemVariants} className="text-5xl md:text-9xl font-serif text-white mb-6 md:mb-8 leading-[1.1] md:leading-[0.9]">
             Beyond First <br />
-            <span className="text-gradient font-serif italic italic pr-4">Class</span>
+            <span className="text-gradient font-serif italic pr-4">Class</span>
           </motion.h1>
 
-          <motion.p variants={itemVariants} className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed mb-12">
+          <motion.p variants={itemVariants} className="text-gray-400 text-base md:text-xl max-w-2xl mx-auto font-light leading-relaxed mb-10 md:mb-12">
             An curated collection of the world's most exceptional automobiles. <br className="hidden md:block" />
             Designed for those who demand nothing short of perfection.
           </motion.p>
 
-          <motion.div variants={itemVariants} className="flex flex-col md:flex-row items-center justify-center gap-6">
-            <Link to="/fleet" className="group relative">
-              <div className="absolute -inset-0.5 bg-luxe-gold opacity-30 blur group-hover:opacity-60 transition duration-500 rounded-full" />
-              <button className="relative px-12 py-5 bg-luxe-gold text-black font-bold uppercase text-xs tracking-[0.3em] rounded-full hover:bg-luxe-gold-light transition-all duration-300">
+          <motion.div variants={itemVariants} className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
+            <Link to="/fleet" className="group relative w-full md:w-auto">
+              <div className="absolute -inset-0.5 bg-luxe-gold opacity-30 blur group-hover:opacity-60 transition duration-500 rounded-full hidden md:block" />
+              <button className="relative w-full md:w-auto px-10 md:px-12 py-4 md:py-5 bg-luxe-gold text-black font-bold uppercase text-[10px] md:text-xs tracking-[0.2em] md:tracking-[0.3em] rounded-full hover:bg-luxe-gold-light transition-all duration-300">
                 Explore Fleet
               </button>
             </Link>
             
-            <Link to="/documentation">
-              <button className="px-12 py-5 bg-white/5 hover:bg-white/10 text-white font-bold uppercase text-xs tracking-[0.3em] rounded-full border border-white/10 backdrop-blur-md transition-all duration-300">
+            <Link to="/documentation" className="w-full md:w-auto">
+              <button className="w-full md:w-auto px-10 md:px-12 py-4 md:py-5 bg-white/5 hover:bg-white/10 text-white font-bold uppercase text-[10px] md:text-xs tracking-[0.2em] md:tracking-[0.3em] rounded-full border border-white/10 backdrop-blur-md transition-all duration-300">
                 Our Story
               </button>
             </Link>

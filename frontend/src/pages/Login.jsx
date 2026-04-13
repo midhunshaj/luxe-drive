@@ -42,11 +42,11 @@ const Login = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="glass-card p-12 md:p-16 w-full max-w-lg relative border-white/5"
+        className="glass-card p-8 md:p-16 w-full max-w-lg relative border-white/5"
       >
-        <div className="mb-12 text-center">
-          <h2 className="text-4xl md:text-5xl font-serif text-white mb-4">Welcome <span className="text-luxe-gold italic font-serif">Back</span></h2>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-gray-500 font-bold">LuxeDrive Restricted Access</p>
+        <div className="mb-10 md:mb-12 text-center">
+          <h2 className="text-3xl md:text-5xl font-serif text-white mb-3 md:mb-4">Welcome <span className="text-luxe-gold italic font-serif">Back</span></h2>
+          <p className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] md:tracking-[0.4em] text-gray-500 font-bold">LuxeDrive Restricted Access</p>
         </div>
         
         {isError && (
