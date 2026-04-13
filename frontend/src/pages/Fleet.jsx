@@ -161,6 +161,21 @@ const Fleet = () => {
       return;
     }
 
+    // Guard against manually blocked dates (countInStock === 1)
+    if (selectedCar?.countInStock <= 1 && selectedCar?.blockedDates?.length > 0) {
+      const s = new Date(startDate);
+      const end_ = new Date(endDate);
+      const cur = new Date(s);
+      while (cur <= end_) {
+        const iso = cur.toISOString().split('T')[0];
+        if (selectedCar.blockedDates.includes(iso)) {
+          alert(`⚠️ Booking blocked: ${new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })} is manually blocked for this vehicle. Please choose different dates.`);
+          return;
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+
     const start = new Date(`${startDate}T${startTime}`);
     const end = new Date(`${endDate}T${endTime}`);
     const rentalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
@@ -432,6 +447,40 @@ const Fleet = () => {
 
               {/* Right Side: Form */}
               <div className="md:w-3/5 p-8 md:p-12 overflow-y-auto custom-scrollbar">
+                {/* ── Blocked-date conflict detection ─────────────────────────────── */}
+                {(() => {
+                  // Build a Set of every date in the user's chosen range
+                  const blockedDates = selectedCar?.blockedDates || [];
+                  const stock = selectedCar?.countInStock ?? 1;
+                  let conflictDates = [];
+
+                  if (stock <= 1 && blockedDates.length > 0 && startDate && endDate) {
+                    const s = new Date(startDate);
+                    const e = new Date(endDate);
+                    const cur = new Date(s);
+                    while (cur <= e) {
+                      const iso = cur.toISOString().split('T')[0];
+                      if (blockedDates.includes(iso)) conflictDates.push(iso);
+                      cur.setDate(cur.getDate() + 1);
+                    }
+                  }
+
+                  // Expose to outer scope via a data attr we read in submit
+                  window.__luxeConflict__ = conflictDates.length > 0;
+
+                  return conflictDates.length > 0 ? (
+                    <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/25 rounded-xl p-4 mb-2">
+                      <span className="text-red-400 text-lg leading-none mt-0.5">⚠</span>
+                      <div>
+                        <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-red-400 mb-1">Date Conflict Detected</p>
+                        <p className="text-[8px] md:text-[9px] text-red-400/70 leading-relaxed">
+                          This vehicle is manually blocked on <span className="font-bold text-red-400">{conflictDates.map(d => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })).join(', ')}</span>. Please choose different dates.
+                        </p>
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+
                 <form onSubmit={processPayment} className="space-y-8 md:space-y-10">
                   <div className="space-y-6 md:space-y-8">
                     <h3 className="text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] font-bold text-white/80 border-b border-white/5 pb-3">Configuration</h3>
@@ -489,10 +538,15 @@ const Fleet = () => {
                   <div className="pt-6 md:pt-10 flex flex-col sm:flex-row gap-4 md:gap-6">
                     <button type="button" onClick={closeModal} className="w-full sm:flex-1 py-4 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors order-last sm:order-first">Discard</button>
                     <button 
-                      type="submit" 
-                      className="w-full sm:flex-[2] bg-luxe-gold text-black font-bold py-4 md:py-5 rounded-2xl uppercase tracking-[0.3em] md:tracking-[0.4em] text-[9px] md:text-[10px] shadow-2xl hover:scale-[1.02] transition-all"
+                      type="submit"
+                      disabled={window.__luxeConflict__ === true}
+                      className={`w-full sm:flex-[2] font-bold py-4 md:py-5 rounded-2xl uppercase tracking-[0.3em] md:tracking-[0.4em] text-[9px] md:text-[10px] shadow-2xl transition-all ${
+                        window.__luxeConflict__
+                          ? 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-60'
+                          : 'bg-luxe-gold text-black hover:scale-[1.02]'
+                      }`}
                     >
-                      Authenticate & Pay
+                      {window.__luxeConflict__ ? 'Dates Unavailable' : 'Authenticate & Pay'}
                     </button>
                   </div>
                 </form>
