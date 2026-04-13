@@ -1,0 +1,112 @@
+name: 🚀 LuxeDrive Auto Deploy
+
+on:
+  push:
+    branches:
+      - main  # Triggers on every push to the main branch
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Opt into Node.js 24 to fix deprecation warning
+
+jobs:
+  deploy:
+    name: Deploy to AWS Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ✅ Checkout Code
+        uses: actions/checkout@v4.2.2
+
+      - name: 🔐 SSH into Server & Deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USER }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            echo "🚀 Starting LuxeDrive Deployment (Home Directory Architecture)..."
+            
+            DEPLOY_PATH="/home/midhun/luxe-drive"
+            mkdir -p $DEPLOY_PATH
+            
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              echo "📥 LuxeDrive not found. Cloning freshly..."
+              cd /home/midhun
+              rm -rf luxe-drive
+              git clone https://github.com/midhunshaj/luxe-drive.git
+              cd luxe-drive
+            else
+              echo "📥 LuxeDrive found! Syncing..."
+              cd $DEPLOY_PATH
+              git config --global --add safe.directory $DEPLOY_PATH
+              
+              mkdir -p /home/midhun/luxe_backups
+              cp -r $DEPLOY_PATH/backend/uploads /home/midhun/luxe_backups/ || true
+              
+              git fetch --all
+              git reset --hard origin/main
+              
+              cp -r /home/midhun/luxe_backups/uploads/* $DEPLOY_PATH/backend/uploads/ || true
+              cp -r /website/luxe-drive/backend/uploads/* $DEPLOY_PATH/backend/uploads/ || true
+            fi
+
+            echo "📦 Building Backend..."
+            cd $DEPLOY_PATH/backend
+            npm install --omit=dev
+
+            echo "🏗️ Building Frontend..."
+            cd $DEPLOY_PATH/frontend
+            npm install
+            npm run build
+            cd ..
+
+            echo "♻️ Restarting PM2..."
+            # Force kill anything already on port 5000 (Very important!)
+            sudo fuser -k 5000/tcp || true
+            
+            cd $DEPLOY_PATH/backend
+            pm2 delete luxedrive-backend || true
+            pm2 start server.js --name luxedrive-backend --cwd $DEPLOY_PATH/backend
+            pm2 save
+            
+            echo "🌐 Configuring NGINX..."
+            sudo tee /etc/nginx/sites-available/luxedrive > /dev/null <<'EOF'
+            server {
+                listen 80;
+                server_name midhunshaj.in www.midhunshaj.in;
+                root /home/midhun/luxe-drive/frontend/dist;
+                index index.html;
+
+                location / {
+                    try_files $uri $uri/ /index.html;
+                }
+
+                location /api {
+                    proxy_pass http://127.0.0.1:5000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_cache_bypass $http_upgrade;
+                }
+
+                location /socket.io {
+                    proxy_pass http://127.0.0.1:5000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection "upgrade";
+                    proxy_set_header Host $host;
+                }
+
+                location /uploads {
+                    alias /home/midhun/luxe-drive/backend/uploads/;
+                }
+            }
+            EOF
+            
+            sudo ln -sf /etc/nginx/sites-available/luxedrive /etc/nginx/sites-enabled/
+            sudo rm -f /etc/nginx/sites-enabled/default
+            sudo nginx -t && sudo systemctl restart nginx
+            echo "✅ DEPLOYMENT SUCCESSFUL!"
