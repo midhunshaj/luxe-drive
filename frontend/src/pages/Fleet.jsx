@@ -284,7 +284,8 @@ const Fleet = () => {
             <div className="space-y-2 md:space-y-3">
               <label className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] text-white/50 font-bold ml-1">Arrival Date</label>
               <input 
-                type="date" 
+                type="date"
+                min={getTodayStr()}
                 value={startDate} 
                 onChange={(e) => setStartDate(e.target.value)} 
                 className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-luxe-gold/30 focus:border-luxe-gold outline-none transition text-sm"
@@ -293,7 +294,8 @@ const Fleet = () => {
             <div className="space-y-2 md:space-y-3">
               <label className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] text-white/50 font-bold ml-1">Return Date</label>
               <input 
-                type="date" 
+                type="date"
+                min={startDate || getTodayStr()}
                 value={endDate} 
                 onChange={(e) => setEndDate(e.target.value)} 
                 className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-luxe-gold/30 focus:border-luxe-gold outline-none transition text-sm"
@@ -501,7 +503,7 @@ const Fleet = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                       <div className="space-y-2">
                         <label className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Arrival Date</label>
-                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-white/30 outline-none transition text-xs md:text-sm" required />
+                        <input type="date" min={getTodayStr()} value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white hover:border-white/30 outline-none transition text-xs md:text-sm" required />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Arrival Time</label>
@@ -512,7 +514,7 @@ const Fleet = () => {
                     <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 transition-opacity duration-500 ${bookingType === '1day' ? 'opacity-30 pointer-events-none' : ''}`}>
                       <div className="space-y-2">
                         <label className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Return Date</label>
-                        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white outline-none transition text-xs md:text-sm" required />
+                        <input type="date" min={startDate || getTodayStr()} value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 md:p-4 text-white outline-none transition text-xs md:text-sm" required />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-500 font-bold ml-1">Return Time</label>
