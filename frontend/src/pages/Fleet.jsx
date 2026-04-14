@@ -5,8 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import io from 'socket.io-client';
+import toast from 'react-hot-toast';
 import GoogleAd from '../components/GoogleAd';
-
+import FleetSkeleton from '../components/FleetSkeleton';
+import EmptyState from '../components/EmptyState';
 import { setCredentials } from '../features/authSlice';
 
 const Fleet = () => {
@@ -132,18 +134,19 @@ const Fleet = () => {
                           kyc.idProofBack?.length > 5;
 
     if (user?.role !== 'admin' && !isKycUploaded) {
-      alert("⚠️ Verification required. Please upload documents in your profile.");
+      toast.error('Verification required — please upload your documents in Profile.');
       navigate('/profile');
       return;
     }
     
     const currentOccupancy = (lockedCars[car._id] || []).filter(lock => lock.socketId !== myId).length;
     if (currentOccupancy >= car.countInStock) {
-      alert("This vehicle is currently being reserved by others. Please wait.");
+      toast.error('This vehicle is currently being reserved by others. Please wait.');
       return;
     }
 
     if (!socket || !socket.connected) {
+      toast.error('Connection lost — refreshing inventory.');
       window.location.reload();
       return;
     }
@@ -163,18 +166,18 @@ const Fleet = () => {
     e.preventDefault();
     
     if (!bookingData.licenseNo || !bookingData.phoneNo) {
-      alert("Please fill in all details.");
+      toast.error('Please fill in all required details.');
       return;
     }
 
     // Guard: reject past dates using LOCAL date comparison
     const todayLocal = getTodayStr(new Date());
     if (startDate < todayLocal) {
-      alert("⚠️ Arrival date cannot be in the past. Please select today or a future date.");
+      toast.error('Arrival date cannot be in the past.');
       return;
     }
     if (endDate < startDate) {
-      alert("⚠️ Return date must be on or after the arrival date.");
+      toast.error('Return date must be on or after the arrival date.');
       return;
     }
 
@@ -186,7 +189,7 @@ const Fleet = () => {
       while (cur <= end_) {
         const iso = cur.toISOString().split('T')[0];
         if (selectedCar.blockedDates.includes(iso)) {
-          alert(`⚠️ Booking blocked: ${new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })} is manually blocked for this vehicle. Please choose different dates.`);
+          toast.error(`${new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })} is blocked for this vehicle. Choose different dates.`);
           return;
         }
         cur.setDate(cur.getDate() + 1);
@@ -233,9 +236,10 @@ const Fleet = () => {
             }, config);
 
             socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
+            toast.success('Reservation confirmed! Redirecting to your bookings.');
             navigate('/my-bookings'); 
           } catch (err) {
-            alert("Payment verification failed.");
+            toast.error('Payment verification failed. Please contact support.');
             socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
           }
         },
@@ -254,7 +258,7 @@ const Fleet = () => {
       setPaymentLoadingId(null);
 
     } catch (error) {
-      alert(`Error: ${error.response?.data?.message || 'Transaction failed.'}`);
+      toast.error(error.response?.data?.message || 'Transaction failed. Please try again.');
       setPaymentLoadingId(null);
       socket.emit('unlockCar', { carId: selectedCar._id, userId: user._id });
     }
@@ -331,10 +335,14 @@ const Fleet = () => {
       {/* Fleet Grid */}
       <section className="max-w-7xl mx-auto px-6 pb-20">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-40 gap-6">
-            <div className="w-12 h-12 border-t-2 border-luxe-gold rounded-full animate-spin" />
-            <p className="text-[10px] uppercase tracking-[0.5em] text-gray-500 font-bold">Synchronizing Inventory</p>
-          </div>
+          <FleetSkeleton count={4} />
+        ) : cars.length === 0 ? (
+          <EmptyState
+            icon="🚗"
+            title="No Vehicles Available"
+            subtitle="No vehicles match your selected dates. Try adjusting your arrival and return dates to explore our full collection."
+            cta={{ label: 'View All Dates', to: '/fleet' }}
+          />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {cars.map((car, index) => {

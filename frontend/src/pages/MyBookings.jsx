@@ -4,6 +4,31 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import io from 'socket.io-client';
+import toast from 'react-hot-toast';
+import EmptyState from '../components/EmptyState';
+
+// ── Skeleton card for loading state ──────────────────────────────────────────
+const BookingSkeleton = () => (
+  <div className="relative bg-[#0d0d0d] border border-white/5 overflow-hidden flex flex-col md:flex-row h-auto md:h-[300px] animate-pulse">
+    <div className="md:w-2/5 h-48 md:h-full bg-white/5 relative">
+      <div className="absolute top-6 left-6 h-6 w-20 bg-white/10 rounded-full" />
+    </div>
+    <div className="md:w-3/5 p-8 md:p-10 flex flex-col justify-between">
+      <div className="space-y-3">
+        <div className="h-6 w-32 bg-white/10 rounded" />
+        <div className="h-5 w-20 bg-luxe-gold/20 rounded" />
+        <div className="pt-4 grid grid-cols-2 gap-4">
+          <div className="h-8 bg-white/5 rounded" />
+          <div className="h-8 bg-white/5 rounded" />
+        </div>
+      </div>
+      <div className="flex justify-between items-center mt-8 pt-6 border-t border-white/5">
+        <div className="h-4 w-28 bg-white/5 rounded" />
+        <div className="h-7 w-20 bg-white/5 rounded-full" />
+      </div>
+    </div>
+  </div>
+);
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -25,6 +50,7 @@ const MyBookings = () => {
         setLoading(false);
       } catch (error) {
         console.error("Failed to load bookings", error);
+        toast.error('Failed to load reservations. Please refresh.');
         setLoading(false);
       }
     };
@@ -40,11 +66,12 @@ const MyBookings = () => {
           b._id === data.bookingId ? { ...b, dealerStatus: data.dealerStatus } : b
         )
       );
+      // Show toast on real-time status update
+      const label = data.dealerStatus === 'accepted' ? '✅ Reservation confirmed by dealer!' : '❌ Reservation was declined.';
+      data.dealerStatus === 'accepted' ? toast.success(label) : toast.error(label);
     });
 
-    return () => {
-      socket.disconnect();
-    };
+    return () => { socket.disconnect(); };
   }, [user, navigate]);
 
   return (
@@ -65,24 +92,25 @@ const MyBookings = () => {
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-8xl font-serif"
+            className="text-5xl md:text-8xl font-serif"
           >
             My <span className="text-gradient">Reservations</span>
           </motion.h1>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-40 gap-6">
-            <div className="w-12 h-12 border-t-2 border-luxe-gold rounded-full animate-spin" />
-            <p className="text-[10px] uppercase tracking-[0.5em] text-gray-500 font-bold">Retrieving Credentials</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {[1, 2, 3, 4].map(i => <BookingSkeleton key={i} />)}
           </div>
         ) : bookings.length === 0 ? (
-          <div className="text-center py-40 glass-card">
-            <p className="text-gray-500 text-sm uppercase tracking-widest font-bold">No active reservations found in your history.</p>
-            <Link to="/fleet" className="inline-block mt-8 text-[10px] uppercase tracking-[0.3em] text-luxe-gold hover:text-white transition-colors">Start Your Journey →</Link>
-          </div>
+          <EmptyState
+            icon="📋"
+            title="No Reservations Yet"
+            subtitle="Your reservation history is empty. Explore our curated fleet and secure your first luxury experience today."
+            cta={{ label: 'Explore the Fleet', to: '/fleet' }}
+          />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {bookings.map((booking, index) => (
@@ -104,7 +132,7 @@ const MyBookings = () => {
                   </div>
                 </div>
 
-                <div className="md:w-3/5 p-10 flex flex-col justify-between">
+                <div className="md:w-3/5 p-8 md:p-10 flex flex-col justify-between">
                   <div className="space-y-4">
                     <div className="font-serif">
                       <h3 className="text-2xl text-white mb-1 leading-none">{booking.car?.make || 'Deleted'}</h3>
