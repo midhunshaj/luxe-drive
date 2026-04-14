@@ -1,71 +1,22 @@
-name: 🚀 LuxeDrive Auto Deploy
+name: Deploy LuxeDrive
 
 on:
   push:
-    branches:
-      - main  # Triggers on every push to the main branch
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Opt into Node.js 24 to fix deprecation warning
+    branches: [ main ]
 
 jobs:
   deploy:
-    name: Deploy to AWS Server
     runs-on: ubuntu-latest
-
     steps:
-      - name: ✅ Checkout Code
-        uses: actions/checkout@v4.2.2
-
-      - name: 🔐 SSH into Server & Deploy
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.AWS_HOST }}
-          username: ${{ secrets.AWS_USER }}
-          key: ${{ secrets.AWS_SSH_KEY }}
-          port: 22
+          host: ${{ secrets.SERVER_HOST }}     # Your Server IP
+          username: ${{ secrets.SERVER_USER }} # Your Linux Username (e.g., ubuntu or midhun)
+          key: ${{ secrets.SERVER_SSH_KEY }}   # Your Private SSH Key (.pem file content)
           script: |
-            set -e
-            echo "🚀 Starting LuxeDrive Deployment (Home Directory Architecture)..."
-            
-            DEPLOY_PATH="/home/midhun/luxe-drive"
-            mkdir -p $DEPLOY_PATH
-            
-            if [ ! -d "$DEPLOY_PATH/.git" ]; then
-              echo "📥 LuxeDrive not found. Cloning freshly..."
-              cd /home/midhun
-              rm -rf luxe-drive
-              git clone https://github.com/midhunshaj/luxe-drive.git
-              cd luxe-drive
-            else
-              echo "📥 LuxeDrive found! Syncing..."
-              cd $DEPLOY_PATH
-              git config --global --add safe.directory $DEPLOY_PATH
-              
-              mkdir -p /home/midhun/luxe_backups
-              cp -r $DEPLOY_PATH/backend/uploads /home/midhun/luxe_backups/ || true
-              
-              git fetch --all
-              git reset --hard origin/main
-              
-              cp -r /home/midhun/luxe_backups/uploads/* $DEPLOY_PATH/backend/uploads/ || true
-              cp -r /website/luxe-drive/backend/uploads/* $DEPLOY_PATH/backend/uploads/ || true
-            fi
-
-            echo "📦 Building Backend..."
-            cd $DEPLOY_PATH/backend
-            npm install --omit=dev
-
-            echo "🏗️ Building Frontend..."
-            cd $DEPLOY_PATH/frontend
-            npm install
-            npm run build
-            cd ..
-
-            echo "♻️ Restarting PM2..."
-            cd $DEPLOY_PATH/backend
-            pm2 delete luxedrive-backend || true
-            pm2 start server.js --name luxedrive-backend --cwd $DEPLOY_PATH/backend
-            pm2 save
-            
-            echo "✅ DEPLOYMENT SUCCESSFUL!"
+            cd ~/luxe-drive
+            git pull origin main
+            cd backend && npm install
+            pm2 restart all --update-env
+            echo "🚀 Deployment Complete!"
