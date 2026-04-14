@@ -175,35 +175,47 @@ const updateBookingStatus = async (req, res) => {
       booking.dealerStatus = dealerStatus;
       const updatedBooking = await booking.save();
 
-      // Email Dispatch System
+      // 🚀 PREMIUM EMAIL DISPATCH SYSTEM
       if (dealerStatus === 'accepted' && booking.user?.email) {
         try {
           const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-              user: process.env.EMAIL_USER || 'dummy@gmail.com',
-              pass: process.env.EMAIL_PASS || 'dummy'
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS
             }
           });
 
           const mailOptions = {
-            from: `"LuxeDrive Reservations" <${process.env.EMAIL_USER || 'dummy@gmail.com'}>`,
+            from: `"LuxeDrive Reservations" <${process.env.EMAIL_USER}>`,
             to: booking.user.email,
-            subject: 'LuxeDrive Booking Confirmation ✅',
+            subject: 'Your LuxeDrive Reservation is Approved! ✅',
             html: `
-              <h2>Booking Successful! ✅</h2>
-              <p>Dear ${booking.user.name},</p>
-              <p>Your reservation for the <strong>${booking.car?.make} ${booking.car?.model}</strong> has been officially approved.</p>
-              <p>The vehicle will be delivered to you as soon as possible.</p>
-              <p>Ref ID: ${booking._id}</p>
-              <p>Thank you for choosing LuxeDrive.</p>
+              <div style="background-color: #000; padding: 40px; font-family: 'Helvetica', sans-serif; color: #fff; text-align: center; border: 2px solid #D4AF37; max-width: 600px; margin: auto;">
+                <h1 style="color: #D4AF37; letter-spacing: 5px; margin-bottom: 5px;">LUXEDRIVE</h1>
+                <p style="text-transform: uppercase; font-size: 10px; letter-spacing: 3px; color: #888; margin-top: 0;">Beyond First Class</p>
+                <hr style="border: 0.5px solid #222; margin: 30px 0;" />
+                <h2 style="font-weight: 300; color: #fff;">Reservation Approved</h2>
+                <p style="font-size: 15px; line-height: 1.8; color: #ccc; margin: 20px 0;">
+                  Greetings ${booking.user.name}, <br/>
+                  Your request for the <strong>${booking.car?.make} ${booking.car?.model}</strong> has been officially cleared for delivery.
+                </p>
+                <div style="background-color: #0a0a0a; padding: 25px; border-radius: 4px; margin: 30px 0; border: 1px solid #1a1a1a; text-align: left;">
+                  <p style="margin: 0; font-size: 13px; color: #D4AF37; font-weight: bold;">BOOKING DETAILS</p>
+                  <p style="margin: 10px 0 0; font-size: 13px; color: #aaa;">Ref ID: <span style="color: #fff;">${booking._id}</span></p>
+                  <p style="margin: 5px 0 0; font-size: 13px; color: #aaa;">Vehicle: <span style="color: #fff;">${booking.car?.make} ${booking.car?.model}</span></p>
+                </div>
+                <p style="font-size: 14px; color: #888; margin-bottom: 40px;">Our concierge team will contact you shortly to coordinate the hand-over.</p>
+                <hr style="border: 0.5px solid #222; margin: 30px 0;" />
+                <p style="font-size: 10px; color: #444; letter-spacing: 1px;">© 2026 LUXEDRIVE INTERNATIONAL. ALL RIGHTS RESERVED.</p>
+              </div>
             `
           };
 
           await transporter.sendMail(mailOptions);
-          console.log(`Confirmation Mail sent to ${booking.user.email}`);
+          console.log(`✨ Premium Notification sent to ${booking.user.email}`);
         } catch (mailError) {
-          console.error("Mail Error (Requires real credentials in .env): ", mailError.message);
+          console.error("❌ Notification Failure (Email Service): ", mailError.message);
         }
       }
 
