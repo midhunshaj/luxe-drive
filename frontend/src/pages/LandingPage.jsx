@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import GoogleAd from '../components/GoogleAd';
+import SEO from '../components/SEO';
 
 const LandingPage = () => {
   const handleDonation = async () => {
@@ -14,7 +15,7 @@ const LandingPage = () => {
       }
 
       const options = {
-        key: 'rzp_live_SX7dA0kgUoreAg',
+        key: 'rzp_live_SX7dA0kgUoreAg', // Use live key for donations
         amount: order.amount,
         currency: order.currency,
         name: "Support LuxeDrive",
@@ -24,7 +25,7 @@ const LandingPage = () => {
           alert(`Thank you for your donation of ₹49! ❤️ Transaction ID: ${response.razorpay_payment_id}`);
         },
         prefill: { name: "Valued Visitor" },
-        theme: { color: "#C5A059" }
+        theme: { color: "#FF5F5F" } // Coffee Red
       };
 
       const rzp = new window.Razorpay(options);
@@ -56,7 +57,12 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="bg-luxe-dark min-h-screen">
+    <>
+      <SEO 
+        title="Experience Elite Luxury" 
+        description="The world's most exclusive car rental fleet, curated and developed by Midhun Shaj. Beyond First Class service."
+      />
+      <div className="bg-luxe-dark min-h-screen">
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden px-4 pt-24">
         {/* Cinematic Background */}
@@ -187,6 +193,7 @@ const LandingPage = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 export default LandingPage;
