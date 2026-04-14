@@ -63,50 +63,9 @@ jobs:
             cd ..
 
             echo "♻️ Restarting PM2..."
-            # Force kill anything already on port 5000 (Very important!)
-            sudo fuser -k 5000/tcp || true
-            
             cd $DEPLOY_PATH/backend
             pm2 delete luxedrive-backend || true
             pm2 start server.js --name luxedrive-backend --cwd $DEPLOY_PATH/backend
             pm2 save
             
-            echo "🌐 Configuring NGINX..."
-            sudo tee /etc/nginx/sites-available/luxedrive > /dev/null <<'EOF'
-            server {
-                listen 80;
-                server_name midhunshaj.in www.midhunshaj.in;
-                root /home/midhun/luxe-drive/frontend/dist;
-                index index.html;
-
-                location / {
-                    try_files $uri $uri/ /index.html;
-                }
-
-                location /api {
-                    proxy_pass http://127.0.0.1:5000;
-                    proxy_http_version 1.1;
-                    proxy_set_header Upgrade $http_upgrade;
-                    proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host $host;
-                    proxy_cache_bypass $http_upgrade;
-                }
-
-                location /socket.io {
-                    proxy_pass http://127.0.0.1:5000;
-                    proxy_http_version 1.1;
-                    proxy_set_header Upgrade $http_upgrade;
-                    proxy_set_header Connection "upgrade";
-                    proxy_set_header Host $host;
-                }
-
-                location /uploads {
-                    alias /home/midhun/luxe-drive/backend/uploads/;
-                }
-            }
-            EOF
-            
-            sudo ln -sf /etc/nginx/sites-available/luxedrive /etc/nginx/sites-enabled/
-            sudo rm -f /etc/nginx/sites-enabled/default
-            sudo nginx -t && sudo systemctl restart nginx
             echo "✅ DEPLOYMENT SUCCESSFUL!"
