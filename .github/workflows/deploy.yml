@@ -17,6 +17,7 @@ jobs:
           script: |
             cd ~/luxe-drive
             git pull origin main
-            cd backend && npm install
+            cd frontend && npm install && npm run build
+            cd ../backend && npm install
             pm2 restart all --update-env
             echo "🚀 Deployment Complete!"
