@@ -1,4 +1,4 @@
-name: Deploy LuxeDrive
+name: 🚀 LuxeDrive Auto Deploy
 
 on:
   push:
@@ -8,16 +8,28 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Server via SSH
+      - name: 🔐 SSH & Update Server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_HOST }}     # Your Server IP
-          username: ${{ secrets.SERVER_USER }} # Your Linux Username (e.g., ubuntu or midhun)
-          key: ${{ secrets.SERVER_SSH_KEY }}   # Your Private SSH Key (.pem file content)
+          host: ${{ secrets.SERVER_HOST }}     # Add this in GitHub Secrets
+          username: ${{ secrets.SERVER_USER }} # Add this in GitHub Secrets
+          key: ${{ secrets.SERVER_SSH_KEY }}   # Add this in GitHub Secrets
           script: |
+            set -e
+            echo "📥 Syncing latest code from GitHub..."
             cd ~/luxe-drive
             git pull origin main
-            cd frontend && npm install && npm run build
-            cd ../backend && npm install
+
+            echo "🏗️ Building Frontend (Deploying index.html changes)..."
+            cd frontend
+            npm install
+            npm run build
+
+            echo "📦 Updating Backend..."
+            cd ../backend
+            npm install --omit=dev
+
+            echo "♻️ Restarting Processes..."
             pm2 restart all --update-env
-            echo "🚀 Deployment Complete!"
+            
+            echo "✅ DEPLOYMENT SUCCESSFUL!"
