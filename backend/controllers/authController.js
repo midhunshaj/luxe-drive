@@ -242,19 +242,31 @@ const sendOtp = async (req, res) => {
     await Otp.findOneAndDelete({ phone });
     await Otp.create({ phone, code });
 
-    if (process.env.FAST2SMS_API_KEY && process.env.FAST2SMS_API_KEY !== 'REPLACE_WITH_YOUR_KEY') {
+    // 📱 NEW: SMS GATE APP INTEGRATION (Using your mobile's 300 SMS/day quota)
+    if (process.env.SMS_GATE_USERNAME && process.env.SMS_GATE_USERNAME !== 'UR_GET_FROM_APP_HOME') {
       try {
-        const response = await axios.get(`https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS_API_KEY}&route=q&message=Your LuxeDrive OTP is ${code}&flash=0&numbers=${phone}`);
-        console.log(`📡 Fast2SMS Response:`, response.data);
+        const url = 'https://api.sms-gate.app/3rdparty/v1/message';
+        const auth = Buffer.from(`${process.env.SMS_GATE_USERNAME}:${process.env.SMS_GATE_PASSWORD}`).toString('base64');
+        
+        const response = await axios.post(url, {
+          message: `Your LuxeDrive OTP is ${code}. Verify to enter the fleet.`,
+          phoneNumbers: [phone.startsWith('+91') ? phone : `+91${phone}`]
+        }, {
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log(`📡 SMS-Gate Response (Mobile Gateway):`, response.data);
       } catch (apiErr) {
-        console.error("❌ Fast2SMS API FAILURE:", apiErr.response?.data || apiErr.message);
+        console.error("❌ SMS-Gate API FAILURE:", apiErr.response?.data || apiErr.message);
         console.log(`💡 TESTER TIP: Use this code to continue testing: ${code}`);
-        // We still return 200 so the frontend shows the OTP field for testing
-        return res.json({ message: 'OTP generated (SMS delivery failed/Simulation)', simulation: true });
+        return res.json({ message: 'OTP generated (Mobile Gateway failed/Simulation)', simulation: true });
       }
     } else {
       console.log(`\n📱 [SIMULATION MODE]`);
-      console.log(`NO API KEY FOUND IN .ENV - USE THIS CODE: ${code}`);
+      console.log(`NO SMS_GATE CREDENTIALS FOUND - USE THIS CODE: ${code}`);
       console.log(`-----------------------------------\n`);
     }
 
