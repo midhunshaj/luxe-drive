@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 const http = require('http');
 const { Server } = require('socket.io');
 const dotenv = require('dotenv');
@@ -34,8 +35,8 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('⚠️ UNHANDLED REJECTION:', reason);
 });
 
-const Car = require('./models/Car'); // Require models at top level for stability
-
+const Car = require('./models/Car');
+const Visitor = require('./models/Visitor');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -66,6 +67,7 @@ app.use('/api/users', authRoutes);
 app.use('/api/cars', require('./routes/carRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/analytics', require('./routes/analyticsRoutes'));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -77,10 +79,53 @@ const activeLocks = {};
 io.on('connection', (socket) => {
   console.log('📡 Logic Engine: New User Socket Connection established:', socket.id);
 
-  socket.on('join', (userId) => {
+  // Track new visitor
+  const createVisitor = async () => {
+    try {
+      // Get real IP (handling proxies like Render/Heroku/Nginx)
+      let ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+      if (ip.includes(',')) ip = ip.split(',')[0].trim(); // Handle multiple IPs in header
+      if (ip === '::1' || ip === '::ffff:127.0.0.1') ip = '8.8.8.8'; // Mock IP for local testing
+
+      let locationData = {};
+      try {
+        const { data } = await axios.get(`http://ip-api.com/json/${ip}`);
+        if (data.status === 'success') {
+          locationData = {
+            city: data.city,
+            country: data.country,
+            region: data.regionName,
+            coordinates: [data.lat, data.lon]
+          };
+        }
+      } catch (err) {
+        console.error('Geo-fetch failed:', err.message);
+      }
+
+      await Visitor.create({ 
+        socketId: socket.id,
+        ip: ip === '8.8.8.8' ? '127.0.0.1 (Local)' : ip,
+        location: locationData,
+        startTime: new Date()
+      });
+      io.emit('visitorUpdate'); // Notify admin to refresh
+    } catch (err) {
+      console.error('Error creating visitor:', err);
+    }
+  };
+  createVisitor();
+
+  socket.on('join', async (userId) => {
     socket.join(userId);
     console.log(`👤 User joined private room: ${userId}`);
     socket.emit('initialLocks', activeLocks);
+    
+    // Associate visitor with user ID
+    try {
+      await Visitor.findOneAndUpdate({ socketId: socket.id }, { userId });
+    } catch (err) {
+      console.error('Error updating visitor with userId:', err);
+    }
   });
 
   socket.on('lockCar', async ({ carId, userId }) => {
@@ -122,13 +167,29 @@ io.on('connection', (socket) => {
     console.log(`🔓 Car UNLOCKED: ${carId}`);
   });
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     // Clean up all locks held by this socket on disconnect
     Object.keys(activeLocks).forEach(carId => {
       activeLocks[carId] = activeLocks[carId].filter(l => l.socketId !== socket.id);
       if (activeLocks[carId].length === 0) delete activeLocks[carId];
       io.emit('carUnlocked', { carId, locks: activeLocks[carId] || [] });
     });
+
+    // Update visitor duration
+    try {
+      const visitor = await Visitor.findOne({ socketId: socket.id });
+      if (visitor) {
+        const endTime = new Date();
+        const duration = Math.floor((endTime - visitor.startTime) / 1000);
+        visitor.endTime = endTime;
+        visitor.duration = duration;
+        await visitor.save();
+      }
+      io.emit('visitorUpdate');
+    } catch (err) {
+      console.error('Error updating visitor disconnect:', err);
+    }
+
     console.log('📡 User disconnected and locks cleared');
   });
 });

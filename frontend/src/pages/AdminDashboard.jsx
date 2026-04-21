@@ -7,7 +7,7 @@ import axios from 'axios';
 import io from 'socket.io-client';
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('deploy'); // 'deploy' | 'bookings' | 'fleet' | 'providers' | 'kyc'
+  const [activeTab, setActiveTab] = useState('deploy'); // 'deploy' | 'bookings' | 'fleet' | 'providers' | 'kyc' | 'analytics'
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [providers, setProviders] = useState([]);
@@ -21,6 +21,8 @@ const AdminDashboard = () => {
   const [selectedCarBookings, setSelectedCarBookings] = useState(null);
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [analytics, setAnalytics] = useState(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
   const openSchedule = (car) => {
     setSelectedCarSchedule(car);
@@ -134,12 +136,22 @@ const AdminDashboard = () => {
       if (activeTab === 'fleet') {
         dispatch(getCars());
       }
+
+      if (activeTab === 'analytics' && user.role === 'admin') {
+        setLoadingAnalytics(true);
+        try {
+          const { data } = await axios.get('/api/analytics', config);
+          setAnalytics(data);
+        } catch (err) { console.error(err); }
+        setLoadingAnalytics(false);
+      }
     };
     
     fetchGlobalData();
 
     const socket = io({ path: '/socket.io/', transports: ['websocket', 'polling'] });
     socket.on('inventoryUpdate', () => { if (activeTab === 'fleet') dispatch(getCars()); });
+    socket.on('visitorUpdate', () => { if (activeTab === 'analytics') fetchGlobalData(); });
     return () => socket.disconnect();
   }, [activeTab, user, dispatch]);
 
@@ -223,8 +235,8 @@ const AdminDashboard = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {['deploy', 'fleet', 'bookings', 'providers', 'kyc'].map(tab => {
-            if ((tab === 'providers' || tab === 'kyc') && user?.role !== 'admin') return null;
+          {['deploy', 'fleet', 'bookings', 'providers', 'kyc', 'analytics'].map(tab => {
+            if ((tab === 'providers' || tab === 'kyc' || tab === 'analytics') && user?.role !== 'admin') return null;
             return (
               <button 
                 key={tab}
@@ -437,6 +449,77 @@ const AdminDashboard = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'analytics' && analytics && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-xl hover:border-luxe-gold/30 transition">
+                <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2">Total Visits</p>
+                <h3 className="text-4xl font-black text-white">{analytics.totalVisitors}</h3>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-xl hover:border-luxe-gold/30 transition relative">
+                <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2">Active Now</p>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-4xl font-black text-white">{analytics.activeVisitors}</h3>
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                </div>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-xl hover:border-luxe-gold/30 transition">
+                <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2">Avg. Staying Time</p>
+                <h3 className="text-4xl font-black text-luxe-gold">{Math.floor(analytics.avgDuration / 60)}m {analytics.avgDuration % 60}s</h3>
+              </div>
+            </div>
+
+            <div className="bg-gray-900 border border-gray-800 rounded-3xl overflow-hidden shadow-2xl">
+              <div className="p-8 border-b border-gray-800 bg-black/40">
+                <h2 className="text-xl font-black uppercase tracking-tighter">Recent <span className="text-luxe-gold">Activity</span></h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-[10px] text-gray-500 uppercase tracking-widest font-black border-b border-gray-800">
+                      <th className="p-6">Visitor</th>
+                      <th className="p-6">Session Start</th>
+                      <th className="p-6">Duration</th>
+                      <th className="p-6">IP / Platform</th>
+                      <th className="p-6 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analytics.recentVisitors.map(v => (
+                      <tr key={v._id} className="border-b border-gray-800/50 hover:bg-white/5 transition-colors text-sm">
+                        <td className="p-6">
+                           <div className="font-bold">{v.userId?.name || 'Anonymous Guest'}</div>
+                           <div className="text-[10px] text-gray-500">{v.userId?.email || 'unauthenticated_session'}</div>
+                        </td>
+                        <td className="p-6">{new Date(v.startTime).toLocaleString()}</td>
+                        <td className="p-6 font-mono text-xs text-luxe-gold">
+                           {v.endTime ? `${Math.floor(v.duration / 60)}m ${v.duration % 60}s` : 'Live...'}
+                        </td>
+                        <td className="p-6 text-gray-400">
+                          {v.location?.city ? (
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-black uppercase text-white tracking-widest">{v.location.city}, {v.location.region}</span>
+                              <span className="text-[10px] text-gray-500 font-bold uppercase">{v.location.country}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-gray-600 italic">Location Hidden</span>
+                          )}
+                          <div className="text-[9px] text-gray-600 font-mono mt-1">{v.ip}</div>
+                        </td>
+                        <td className="p-6 text-right">
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${!v.endTime ? 'bg-green-900/40 text-green-500 animate-pulse' : 'bg-gray-800 text-gray-500'}`}>
+                            {!v.endTime ? 'Online' : 'Offline'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </motion.div>
         )}
