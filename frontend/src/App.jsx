@@ -14,6 +14,11 @@ import AdminDashboard from './pages/AdminDashboard';
 import MyBookings from './pages/MyBookings';
 import Profile from './pages/Profile';
 import Documentation from './pages/Documentation';
+import AboutUs from './pages/AboutUs';
+import ContactUs from './pages/ContactUs';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import RefundPolicy from './pages/RefundPolicy';
 
 // ── Page transition wrapper ───────────────────────────────────────────────────
 const PageTransition = ({ children }) => (
@@ -41,6 +46,11 @@ const AnimatedRoutes = () => {
         <Route path="/my-bookings" element={<PageTransition><MyBookings /></PageTransition>} />
         <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
         <Route path="/documentation" element={<PageTransition><Documentation /></PageTransition>} />
+        <Route path="/about" element={<PageTransition><AboutUs /></PageTransition>} />
+        <Route path="/contact" element={<PageTransition><ContactUs /></PageTransition>} />
+        <Route path="/privacy-policy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
+        <Route path="/terms-of-service" element={<PageTransition><TermsOfService /></PageTransition>} />
+        <Route path="/refund-policy" element={<PageTransition><RefundPolicy /></PageTransition>} />
         <Route path="*" element={<PageTransition><div className="p-40 text-center text-4xl text-gray-500">Page Coming Soon!</div></PageTransition>} />
       </Routes>
     </AnimatePresence>
