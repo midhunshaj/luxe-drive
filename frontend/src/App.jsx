@@ -19,6 +19,8 @@ import ContactUs from './pages/ContactUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import RefundPolicy from './pages/RefundPolicy';
+import Journal from './pages/Journal';
+import Article from './pages/Article';
 
 // ── Page transition wrapper ───────────────────────────────────────────────────
 const PageTransition = ({ children }) => (
@@ -51,6 +53,8 @@ const AnimatedRoutes = () => {
         <Route path="/privacy-policy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
         <Route path="/terms-of-service" element={<PageTransition><TermsOfService /></PageTransition>} />
         <Route path="/refund-policy" element={<PageTransition><RefundPolicy /></PageTransition>} />
+        <Route path="/journal" element={<PageTransition><Journal /></PageTransition>} />
+        <Route path="/journal/:slug" element={<PageTransition><Article /></PageTransition>} />
         <Route path="*" element={<PageTransition><div className="p-40 text-center text-4xl text-gray-500">Page Coming Soon!</div></PageTransition>} />
       </Routes>
     </AnimatePresence>

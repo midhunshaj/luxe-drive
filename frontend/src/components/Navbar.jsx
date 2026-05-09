@@ -20,6 +20,7 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Fleet', path: '/fleet' },
     { name: 'Experience', path: '/documentation' },
+    { name: 'Journal', path: '/journal' },
   ];
 
   return (

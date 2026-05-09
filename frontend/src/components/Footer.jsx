@@ -6,6 +6,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-10">
           <a href="/about" className="text-gray-400 hover:text-luxe-gold text-xs uppercase tracking-[0.2em] transition-colors">About Us</a>
+          <a href="/journal" className="text-gray-400 hover:text-luxe-gold text-xs uppercase tracking-[0.2em] transition-colors">Journal</a>
           <a href="/contact" className="text-gray-400 hover:text-luxe-gold text-xs uppercase tracking-[0.2em] transition-colors">Contact Us</a>
           <a href="/privacy-policy" className="text-gray-400 hover:text-luxe-gold text-xs uppercase tracking-[0.2em] transition-colors">Privacy Policy</a>
           <a href="/terms-of-service" className="text-gray-400 hover:text-luxe-gold text-xs uppercase tracking-[0.2em] transition-colors">Terms of Service</a>
