@@ -32,7 +32,7 @@ const Article = () => {
           <div className="absolute inset-0 z-0">
             <div 
               className="w-full h-full bg-center bg-cover"
-              style={{ backgroundImage: \`url('\${article.image}')\` }}
+              style={{ backgroundImage: `url('${article.image}')` }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-luxe-dark via-luxe-dark/60 to-transparent" />
           </div>
