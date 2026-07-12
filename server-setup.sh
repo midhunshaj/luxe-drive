@@ -31,12 +31,13 @@ echo ""
 echo "📁 [4/7] Installing Git..."
 sudo apt-get install -y git
 
-# --- 5. Clone your GitHub repo ---
+# --- 5. Set up Symlink and home directory permissions ---
 echo ""
-echo "📥 [5/7] Cloning LuxeDrive from GitHub..."
-echo "⚠️  IMPORTANT: Replace the URL below with YOUR GitHub repo URL!"
-# sudo git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git /var/www/luxe-drive
-echo "❗ Edit this script and uncomment the git clone line above first!"
+echo "🔗 [5/7] Linking repository and configuring permissions..."
+sudo mkdir -p /var/www
+sudo ln -sfn "$HOME/luxe-drive" /var/www/luxe-drive
+chmod +x "$HOME"
+echo "✅ Configured /var/www/luxe-drive symlink and home folder search permissions."
 
 # --- 6. Create the .env file on the server ---
 echo ""
@@ -60,7 +61,7 @@ echo "🌐 [7/7] Writing NGINX config..."
 sudo bash -c 'cat > /etc/nginx/sites-available/luxedrive <<EOF
 server {
     listen 80;
-    server_name YOUR_DOMAIN_OR_IP;  # <-- Replace with your AWS Elastic IP or domain
+    server_name _;  # <-- Listen dynamically to any domain or IP address
 
     # Serve the React build (frontend)
     root /var/www/luxe-drive/frontend/dist;
@@ -102,10 +103,8 @@ echo "  ✅ Server Setup Complete!"
 echo "=============================================="
 echo ""
 echo "Next steps:"
-echo "  1. Clone your repo (edit this script and re-run step 5)"
-echo "  2. Create /var/www/luxe-drive/backend/.env with your secrets"
-echo "  3. Update NGINX config with your real IP/domain"
-echo "  4. Run: cd /var/www/luxe-drive/backend && npm install"
-echo "  5. Run: cd /var/www/luxe-drive/frontend && npm install && npm run build"
-echo "  6. Run: pm2 start backend/server.js --name luxedrive-backend && pm2 save"
-echo "  7. Push to GitHub and watch auto-deploy kick in! 🚀"
+echo "  1. Create /var/www/luxe-drive/backend/.env with your production secrets"
+echo "  2. Run: cd /var/www/luxe-drive/backend && npm install --omit=dev"
+echo "  3. Run: pm2 start server.js --name luxedrive-backend && pm2 save"
+echo "  4. Run: cd /var/www/luxe-drive/frontend && npm install --legacy-peer-deps && npm run build"
+echo "  5. Push to GitHub and watch auto-deploy kick in! 🚀"
